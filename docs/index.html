@@ -8,12 +8,42 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <div class="mode-selection">
-        <button id="workModeBtn" name="workModeBtn">Work Mode</button>
-        <button id="chatModeBtn" name="chatModeBtn">Chat Mode</button>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="hamburger-menu" id="hamburgerMenu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1 class="app-title">Rapid AI Assistant</h1>
+        <div class="mode-selection mobile-mode">
+            <button id="workModeBtn" name="workModeBtn" class="mode-btn">Work</button>
+            <button id="chatModeBtn" name="chatModeBtn" class="mode-btn">Chat</button>
+        </div>
+    </header>
+    
+    <!-- Desktop Mode Selection -->
+    <div class="mode-selection desktop-mode">
+        <button id="workModeBtnDesktop" name="workModeBtnDesktop" class="mode-btn">Work Mode</button>
+        <button id="chatModeBtnDesktop" name="chatModeBtnDesktop" class="mode-btn">Chat Mode</button>
     </div>
+    
     <div class="container">
-        <div class="left-panel">
+        <div class="left-panel" id="leftPanel">
+            <div class="panel-header">
+                <h2>Controls</h2>
+                <button class="panel-close" id="panelClose" aria-label="Close panel">&times;</button>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="workspace">Workspace</button>
+                <button class="nav-tab" data-tab="templates">Templates</button>
+                <button class="nav-tab" data-tab="settings">Settings</button>
+            </div>
+            
+            <!-- Workspace Tab -->
+            <div class="tab-content active" id="workspace-tab">
             <div class="panel-section">
                 <h3>File/Folder Selection</h3>
                 <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx,.doc,.rtf,.odt" style="display: none;">
@@ -39,7 +69,99 @@
             </div>
             <div class="panel-section">
                 <h3>Voice to Text</h3>
-                <button id="voiceBtn" name="voiceRecordBtn">Start Recording</button>
+                <button id="voiceBtn" name="voiceRecordBtn" class="btn btn-secondary">Start Recording</button>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="panel-section">
+                <h3>Quick Actions</h3>
+                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">Quick File Upload</button>
+                <button class="btn btn-outline" id="clearAllBtn">Clear All</button>
+            </div>
+            </div>
+            
+            <!-- Templates Tab -->
+            <div class="tab-content" id="templates-tab">
+                <div class="panel-section">
+                    <h3>Template Library</h3>
+                    <div class="template-grid">
+                        <div class="template-card" data-template="summary">
+                            <div class="template-icon">📄</div>
+                            <h4>Document Summary</h4>
+                            <p>Generate concise summaries</p>
+                        </div>
+                        <div class="template-card" data-template="analysis">
+                            <div class="template-icon">📊</div>
+                            <h4>Content Analysis</h4>
+                            <p>Analyze document content</p>
+                        </div>
+                        <div class="template-card" data-template="extraction">
+                            <div class="template-icon">🔍</div>
+                            <h4>Data Extraction</h4>
+                            <p>Extract key information</p>
+                        </div>
+                        <div class="template-card" data-template="translation">
+                            <div class="template-icon">🌐</div>
+                            <h4>Translation</h4>
+                            <p>Translate documents</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>Custom Templates</h3>
+                    <button class="btn btn-outline btn-sm" id="createTemplateBtn">+ Create Template</button>
+                    <div id="customTemplates" class="custom-templates-list">
+                        <!-- Custom templates will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings-tab">
+                <div class="panel-section">
+                    <h3>Preferences</h3>
+                    <div class="setting-item">
+                        <label for="themeSelect">Theme</label>
+                        <select id="themeSelect">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="languageSelect">Language</label>
+                        <select id="languageSelect">
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="autoSave"> Auto-save results
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="notifications"> Enable notifications
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>About</h3>
+                    <div class="about-info">
+                        <p><strong>Rapid AI Assistant</strong></p>
+                        <p>Version 2.0.0</p>
+                        <p>Enhanced with modern UI and improved functionality</p>
+                        <button class="btn btn-outline btn-sm" id="showOnboardingBtn">Show Tutorial</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="right-panel">
@@ -59,8 +181,8 @@
             <div class="prompt-container">
                 <textarea id="promptTextarea" name="promptInput" placeholder="Enter your prompt here..." rows="3" aria-label="Prompt input"></textarea>
                 <div class="button-group">
-                    <button id="processBtn" name="processBtn">Process</button>
-                    <button id="submitBtn" name="submitBtn">Submit</button>
+                    <button id="processBtn" name="processBtn" class="btn btn-primary">Process</button>
+                    <button id="submitBtn" name="submitBtn" class="btn btn-secondary">Submit</button>
                 </div>
             </div>
         </div>
