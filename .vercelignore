@@ -1,0 +1,108 @@
+# Dependencies
+node_modules
+
+# Build artifacts
+build
+dist
+
+# Version control
+.git
+.gitignore
+
+# IDE and tools
+.trae
+.vscode
+.idea
+
+# Logs
+*.log
+.log
+combined.log
+error.log
+
+# Large directories (causing deployment size issues)
+full source code/
+rapid-ai-assistant/
+sucess code/
+
+# Test files
+__tests__/
+test/
+src/test/
+*.test.js
+*.spec.js
+jest.config.js
+
+# Documentation
+README.md
+docs/ARCHITECTURE.md
+docs/ERROR_HANDLING.md
+
+# Development files
+.babelrc
+.eslintrc.json
+.prettierrc
+.prettierignore
+eslint.config.js
+tsconfig.json
+.node-version
+
+# Archives and large files
+*.zip
+*.pdf
+*.gz
+*.tar
+*.rar
+*.7z
+
+# Temporary and cache
+entries/
+uploads/
+output/
+.vercel/
+
+# Python files
+*.py
+requirements.txt
+
+# Other unnecessary files
+CNAME
+.nojekyll
+index.html
+app.js
+test-*.js
+
+# Large directories that prevent deployment
+full source code/
+rapid-ai-assistant/
+sucess code/
+__tests__/
+test/
+entries/
+
+# Large file types
+*.zip
+*.pdf
+*.gz
+*.tar
+*.rar
+*.7z
+
+# Development and testing files
+combined.log
+error.log
+*.log
+test-*.js
+
+# Python files (not needed for Node.js deployment)
+*.py
+requirements.txt
+
+# Documentation that's not essential for deployment
+ARCHITECTURE.md
+ERROR_HANDLING.md
+
+# Temporary and cache files
+.cache/
+.tmp/
+temp/

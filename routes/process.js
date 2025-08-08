@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 import { processFile } from '../services/fileProcessor.js';
