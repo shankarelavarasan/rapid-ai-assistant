@@ -1459,67 +1459,132 @@ function initializeGlassNavbar() {
 
 // GSAP Animations
 function initializeGSAPAnimations() {
+  if (!window.gsap) {
+    console.warn('GSAP library not loaded');
+    return;
+  }
+  
+  // Register ScrollTrigger plugin if available
+  if (window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+  
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeGSAPElements();
+    });
+  } else {
+    initializeGSAPElements();
+  }
+}
+
+// Initialize GSAP elements with proper checks
+function initializeGSAPElements() {
   if (!window.gsap) return;
   
-  // Animate elements on page load
-  gsap.from('.left-panel', {
-    x: -100,
-    opacity: 0,
-    duration: 1,
-    ease: "power2.out"
-  });
-  
-  gsap.from('.right-panel', {
-    x: 100,
-    opacity: 0,
-    duration: 1,
-    delay: 0.2,
-    ease: "power2.out"
-  });
-  
-  // Animate buttons on hover
-  const buttons = document.querySelectorAll('.btn, .glass-btn');
-  buttons.forEach(button => {
-    button.addEventListener('mouseenter', () => {
-      gsap.to(button, {
-        scale: 1.05,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    });
-    
-    button.addEventListener('mouseleave', () => {
-      gsap.to(button, {
-        scale: 1,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    });
-  });
-  
-  // Animate template cards
-  const templateCards = document.querySelectorAll('.template-card');
-  templateCards.forEach((card, index) => {
-    gsap.from(card, {
-      y: 50,
+  // Animate elements on page load with existence checks
+  const leftPanel = document.querySelector('.left-panel');
+  if (leftPanel) {
+    gsap.from(leftPanel, {
+      x: -100,
       opacity: 0,
-      duration: 0.6,
-      delay: index * 0.1,
+      duration: 1,
       ease: "power2.out"
     });
-  });
+  }
   
-  // Parallax effect for background elements
-  gsap.registerPlugin(ScrollTrigger);
+  const rightPanel = document.querySelector('.right-panel');
+  if (rightPanel) {
+    gsap.from(rightPanel, {
+      x: 100,
+      opacity: 0,
+      duration: 1,
+      delay: 0.2,
+      ease: "power2.out"
+    });
+  }
   
-  gsap.to('body', {
-    backgroundPosition: '50% 100%',
-    ease: "none",
-    scrollTrigger: {
-      trigger: "body",
-      start: "top top",
-      end: "bottom top",
-      scrub: true
+  // Animate buttons on hover with existence checks
+  const buttons = document.querySelectorAll('.btn, .glass-btn');
+  if (buttons.length > 0) {
+    buttons.forEach(button => {
+      if (button) {
+        button.addEventListener('mouseenter', () => {
+          gsap.to(button, {
+            scale: 1.05,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        });
+        
+        button.addEventListener('mouseleave', () => {
+          gsap.to(button, {
+            scale: 1,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+        });
+      }
+    });
+  }
+  
+  // Animate template cards with existence checks
+  const templateCards = document.querySelectorAll('.template-card');
+  if (templateCards.length > 0) {
+    templateCards.forEach((card, index) => {
+      if (card) {
+        gsap.from(card, {
+          y: 50,
+          opacity: 0,
+          duration: 0.6,
+          delay: index * 0.1,
+          ease: "power2.out"
+        });
+      }
+    });
+  }
+  
+  // Parallax effect for background elements with ScrollTrigger check
+  if (window.ScrollTrigger) {
+    const bodyElement = document.body;
+    if (bodyElement) {
+      gsap.to(bodyElement, {
+        backgroundPosition: '50% 100%',
+        ease: "none",
+        scrollTrigger: {
+          trigger: bodyElement,
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
     }
-  });
+  }
+  
+  // Initialize other GSAP-dependent components
+  initializeGSAPSlider();
+  initializeGSAPCarousel();
+}
+
+// GSAP-enhanced slider
+function initializeGSAPSlider() {
+  if (!window.gsap) return;
+  
+  const sliderTrack = document.getElementById('sliderTrack');
+  if (sliderTrack) {
+    // Add GSAP animations for slider transitions
+    console.log('GSAP slider initialized');
+  }
+}
+
+// GSAP-enhanced carousel
+function initializeGSAPCarousel() {
+  if (!window.gsap) return;
+  
+  const carousel3D = document.getElementById('carousel3D');
+  if (carousel3D) {
+    // Add GSAP animations for 3D carousel
+    console.log('GSAP 3D carousel initialized');
+  }
 }

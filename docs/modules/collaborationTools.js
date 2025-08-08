@@ -646,6 +646,9 @@ class CollaborationTools {
                         console.error('Max reconnection attempts reached. WebSocket will remain disconnected.');
                         this.connectionState = 'error';
                         
+                        // Enable fallback UI mode
+                        this.enableFallbackUI();
+                        
                         // Notify application about connection failure
                         this.handleRealTimeEvent({
                             type: 'connection_failed',
@@ -1263,6 +1266,68 @@ class CollaborationTools {
             currentWorkspace: this.currentWorkspace?.name || null,
             isConnected: this.websocket?.readyState === WebSocket.OPEN
         };
+    }
+    
+    /**
+     * Enable fallback UI mode when WebSocket connection fails
+     */
+    enableFallbackUI() {
+        console.warn('Enabling fallback UI mode - Real-time features disabled');
+        
+        // Show user notification about offline mode
+        if (typeof window !== 'undefined' && window.toastManager) {
+            window.toastManager.warning('Real-time collaboration disabled. Working in offline mode.');
+        }
+        
+        // Update UI elements to show offline status
+        this.updateUIForOfflineMode();
+        
+        // Disable real-time dependent features
+        this.disableRealTimeFeatures();
+    }
+    
+    /**
+     * Update UI elements to reflect offline mode
+     */
+    updateUIForOfflineMode() {
+        const workspaceStatusEl = document.getElementById('workspaceStatus');
+        if (workspaceStatusEl) {
+            workspaceStatusEl.textContent = 'Offline Mode';
+            workspaceStatusEl.className = 'status disconnected';
+        }
+        
+        const collaborationTab = document.getElementById('collaboration-tab');
+        if (collaborationTab) {
+            const offlineNotice = document.createElement('div');
+            offlineNotice.className = 'offline-notice';
+            offlineNotice.innerHTML = `
+                <div class="alert alert-warning">
+                    <strong>⚠️ Offline Mode</strong><br>
+                    Real-time collaboration features are temporarily unavailable.
+                    You can continue working, and changes will sync when connection is restored.
+                </div>
+            `;
+            collaborationTab.insertBefore(offlineNotice, collaborationTab.firstChild);
+        }
+    }
+    
+    /**
+     * Disable real-time dependent features
+     */
+    disableRealTimeFeatures() {
+        // Disable real-time buttons and features
+        const realtimeButtons = document.querySelectorAll('[data-requires-realtime]');
+        realtimeButtons.forEach(button => {
+            button.disabled = true;
+            button.title = 'This feature requires real-time connection';
+        });
+        
+        // Show fallback messages for collaboration features
+        const collaborationElements = document.querySelectorAll('.collaboration-feature');
+        collaborationElements.forEach(element => {
+            element.style.opacity = '0.5';
+            element.style.pointerEvents = 'none';
+        });
     }
     
     /**

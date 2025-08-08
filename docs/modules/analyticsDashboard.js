@@ -928,6 +928,318 @@ class AnalyticsDashboard {
     }
 
     /**
+     * Get predictive analytics data
+     * @returns {Object} Predictive analytics results
+     */
+    getPredictiveAnalytics() {
+        try {
+            if (!this.config.enablePredictiveAnalytics) {
+                return {
+                    enabled: false,
+                    message: 'Predictive analytics is disabled'
+                };
+            }
+
+            const currentData = this.analyticsData;
+            const processingMetrics = currentData.processingMetrics || {};
+            const usagePatterns = currentData.usagePatterns || {};
+            
+            // Generate basic predictions based on historical data
+            const predictions = {
+                enabled: true,
+                generatedAt: new Date().toISOString(),
+                
+                // Volume predictions
+                volumeForecasting: {
+                    nextWeek: this.predictVolumeGrowth('week'),
+                    nextMonth: this.predictVolumeGrowth('month'),
+                    trend: this.calculateVolumeTrends()?.trend || 'stable'
+                },
+                
+                // Performance predictions
+                performancePrediction: {
+                    expectedProcessingTime: processingMetrics.averageProcessingTime || 0,
+                    capacityUtilization: this.predictCapacityUtilization(),
+                    bottleneckRisk: this.assessBottleneckRisk()
+                },
+                
+                // Usage predictions
+                usagePrediction: {
+                    peakHours: this.predictPeakUsageHours(),
+                    expectedGrowth: this.predictUsageGrowth(),
+                    seasonalPatterns: this.identifySeasonalPatterns()
+                },
+                
+                // Quality predictions
+                qualityPrediction: {
+                    expectedAccuracy: this.predictQualityMetrics(),
+                    riskFactors: this.identifyQualityRisks(),
+                    improvementOpportunities: this.identifyImprovementOpportunities()
+                },
+                
+                // Recommendations
+                recommendations: this.generatePredictiveRecommendations()
+            };
+            
+            return predictions;
+        } catch (error) {
+            console.error('Error generating predictive analytics:', error);
+            return {
+                enabled: false,
+                error: error.message,
+                fallback: {
+                    message: 'Predictive analytics temporarily unavailable',
+                    basicStats: this.getBasicPredictiveStats()
+                }
+            };
+        }
+    }
+    
+    /**
+     * Predict volume growth for specified period
+     * @param {string} period - Prediction period ('week', 'month')
+     * @returns {Object} Volume growth prediction
+     */
+    predictVolumeGrowth(period = 'week') {
+        const volumeHistory = this.analyticsData.processingMetrics?.processingVolumeHistory || [];
+        
+        if (volumeHistory.length < 3) {
+            return {
+                prediction: 0,
+                confidence: 'low',
+                message: 'Insufficient data for prediction'
+            };
+        }
+        
+        // Simple linear regression for prediction
+        const recentData = volumeHistory.slice(-7); // Last 7 data points
+        const avgGrowth = this.calculateAverageGrowthRate(recentData);
+        
+        const multiplier = period === 'month' ? 4 : 1;
+        const prediction = avgGrowth * multiplier;
+        
+        return {
+            prediction: Math.round(prediction),
+            confidence: recentData.length >= 7 ? 'high' : 'medium',
+            period: period,
+            basedOn: `${recentData.length} recent data points`
+        };
+    }
+    
+    /**
+     * Calculate average growth rate from data points
+     * @param {Array} data - Historical data points
+     * @returns {number} Average growth rate
+     */
+    calculateAverageGrowthRate(data) {
+        if (data.length < 2) return 0;
+        
+        let totalGrowth = 0;
+        for (let i = 1; i < data.length; i++) {
+            const growth = data[i].count - data[i-1].count;
+            totalGrowth += growth;
+        }
+        
+        return totalGrowth / (data.length - 1);
+    }
+    
+    /**
+     * Predict capacity utilization
+     * @returns {Object} Capacity prediction
+     */
+    predictCapacityUtilization() {
+        const currentLoad = this.analyticsData.performanceMetrics?.systemLoad || [];
+        const avgLoad = currentLoad.length > 0 ? 
+            currentLoad.reduce((a, b) => a + b.value, 0) / currentLoad.length : 50;
+        
+        return {
+            current: Math.round(avgLoad),
+            predicted: Math.min(100, Math.round(avgLoad * 1.1)), // 10% growth assumption
+            risk: avgLoad > 80 ? 'high' : avgLoad > 60 ? 'medium' : 'low'
+        };
+    }
+    
+    /**
+     * Assess bottleneck risk
+     * @returns {string} Risk level
+     */
+    assessBottleneckRisk() {
+        const avgProcessingTime = this.analyticsData.processingMetrics?.averageProcessingTime || 0;
+        const threshold = this.config.performanceThresholds.processingTime;
+        
+        if (avgProcessingTime > threshold * 0.9) return 'high';
+        if (avgProcessingTime > threshold * 0.7) return 'medium';
+        return 'low';
+    }
+    
+    /**
+     * Predict peak usage hours
+     * @returns {Array} Predicted peak hours
+     */
+    predictPeakUsageHours() {
+        const hourlyDist = this.analyticsData.usagePatterns?.hourlyDistribution || [];
+        const maxUsage = Math.max(...hourlyDist);
+        const threshold = maxUsage * 0.8;
+        
+        return hourlyDist
+            .map((usage, hour) => ({ hour, usage }))
+            .filter(item => item.usage >= threshold)
+            .map(item => item.hour);
+    }
+    
+    /**
+     * Predict usage growth
+     * @returns {Object} Usage growth prediction
+     */
+    predictUsageGrowth() {
+        const sessions = this.analyticsData.usagePatterns?.userSessions || [];
+        const recentSessions = sessions.slice(-30); // Last 30 sessions
+        
+        if (recentSessions.length < 5) {
+            return { growth: 0, confidence: 'low' };
+        }
+        
+        const avgSessionsPerDay = recentSessions.length / 30;
+        const projectedGrowth = avgSessionsPerDay * 0.1; // 10% growth assumption
+        
+        return {
+            growth: Math.round(projectedGrowth),
+            confidence: recentSessions.length >= 20 ? 'high' : 'medium',
+            currentAverage: Math.round(avgSessionsPerDay)
+        };
+    }
+    
+    /**
+     * Identify seasonal patterns
+     * @returns {Object} Seasonal pattern analysis
+     */
+    identifySeasonalPatterns() {
+        const weeklyDist = this.analyticsData.usagePatterns?.weeklyDistribution || [];
+        const maxDay = weeklyDist.indexOf(Math.max(...weeklyDist));
+        const minDay = weeklyDist.indexOf(Math.min(...weeklyDist));
+        
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        return {
+            peakDay: dayNames[maxDay] || 'Unknown',
+            lowDay: dayNames[minDay] || 'Unknown',
+            pattern: this.analyzeWeeklyPattern(weeklyDist)
+        };
+    }
+    
+    /**
+     * Analyze weekly usage pattern
+     * @param {Array} weeklyData - Weekly distribution data
+     * @returns {string} Pattern description
+     */
+    analyzeWeeklyPattern(weeklyData) {
+        if (weeklyData.length !== 7) return 'insufficient_data';
+        
+        const weekdays = weeklyData.slice(1, 6).reduce((a, b) => a + b, 0);
+        const weekends = weeklyData[0] + weeklyData[6];
+        
+        if (weekdays > weekends * 2) return 'business_focused';
+        if (weekends > weekdays) return 'weekend_heavy';
+        return 'balanced';
+    }
+    
+    /**
+     * Predict quality metrics
+     * @returns {Object} Quality prediction
+     */
+    predictQualityMetrics() {
+        const qualityMetrics = this.analyticsData.qualityMetrics || {};
+        const avgAccuracy = qualityMetrics.ocrAccuracy || 0.85; // Default 85%
+        
+        return {
+            expectedAccuracy: Math.round(avgAccuracy * 100),
+            trend: avgAccuracy > 0.9 ? 'excellent' : avgAccuracy > 0.8 ? 'good' : 'needs_improvement',
+            confidence: 'medium'
+        };
+    }
+    
+    /**
+     * Identify quality risks
+     * @returns {Array} Quality risk factors
+     */
+    identifyQualityRisks() {
+        const risks = [];
+        const docAnalytics = this.analyticsData.documentAnalytics || {};
+        
+        if (docAnalytics.confidenceDistribution?.low > 0.1) {
+            risks.push('high_low_confidence_rate');
+        }
+        
+        if (this.analyticsData.processingMetrics?.averageProcessingTime > this.config.performanceThresholds.processingTime) {
+            risks.push('processing_time_degradation');
+        }
+        
+        return risks;
+    }
+    
+    /**
+     * Identify improvement opportunities
+     * @returns {Array} Improvement suggestions
+     */
+    identifyImprovementOpportunities() {
+        const opportunities = [];
+        
+        // Check for optimization opportunities
+        if (this.analyticsData.processingMetrics?.averageProcessingTime > 3000) {
+            opportunities.push('optimize_processing_speed');
+        }
+        
+        if (this.analyticsData.documentAnalytics?.confidenceDistribution?.low > 0.05) {
+            opportunities.push('improve_ocr_accuracy');
+        }
+        
+        return opportunities;
+    }
+    
+    /**
+     * Generate predictive recommendations
+     * @returns {Array} Predictive recommendations
+     */
+    generatePredictiveRecommendations() {
+        const recommendations = [];
+        
+        // Capacity recommendations
+        const capacityPrediction = this.predictCapacityUtilization();
+        if (capacityPrediction.risk === 'high') {
+            recommendations.push({
+                type: 'capacity',
+                priority: 'high',
+                message: 'Consider scaling resources to handle predicted load increase'
+            });
+        }
+        
+        // Performance recommendations
+        const bottleneckRisk = this.assessBottleneckRisk();
+        if (bottleneckRisk === 'high') {
+            recommendations.push({
+                type: 'performance',
+                priority: 'high',
+                message: 'Optimize processing algorithms to prevent bottlenecks'
+            });
+        }
+        
+        return recommendations;
+    }
+    
+    /**
+     * Get basic predictive stats as fallback
+     * @returns {Object} Basic predictive statistics
+     */
+    getBasicPredictiveStats() {
+        return {
+            totalProcessed: this.analyticsData.processingMetrics?.totalProcessed || 0,
+            averageProcessingTime: this.analyticsData.processingMetrics?.averageProcessingTime || 0,
+            successRate: this.analyticsData.processingMetrics?.totalProcessed > 0 ? 
+                (this.analyticsData.processingMetrics?.successfulProcessing / this.analyticsData.processingMetrics?.totalProcessed) * 100 : 0
+        };
+    }
+
+    /**
      * Get current statistics
      * @returns {Object} Current statistics
      */
