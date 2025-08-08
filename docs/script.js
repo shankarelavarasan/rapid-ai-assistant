@@ -1135,4 +1135,391 @@ document.addEventListener('DOMContentLoaded', async () => {
       onboardingManager.startOnboarding();
     }, 1000); // Delay to ensure all elements are loaded
   }
+  
+  // Initialize modern UI components
+  initializeModernUI();
 });
+
+// Modern UI Components
+function initializeModernUI() {
+  // Initialize cursor effects
+  initializeCursorEffects();
+  
+  // Initialize image slider
+  initializeImageSlider();
+  
+  // Initialize 3D carousel
+  initialize3DCarousel();
+  
+  // Initialize smooth scroll effects
+  initializeSmoothScroll();
+  
+  // Initialize glass navbar
+  initializeGlassNavbar();
+  
+  // Initialize GSAP animations
+  initializeGSAPAnimations();
+}
+
+// Cursor Effects
+function initializeCursorEffects() {
+  const canvas = document.getElementById('cursorCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  const particles = [];
+  const maxParticles = 50;
+  
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = Math.random() * 5 + 1;
+      this.speedX = Math.random() * 3 - 1.5;
+      this.speedY = Math.random() * 3 - 1.5;
+      this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+      this.life = 1;
+      this.decay = Math.random() * 0.02 + 0.01;
+    }
+    
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.life -= this.decay;
+      this.size *= 0.98;
+    }
+    
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.life;
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+  
+  function addParticle(x, y) {
+    if (particles.length < maxParticles) {
+      particles.push(new Particle(x, y));
+    }
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+      particles[i].update();
+      particles[i].draw();
+      
+      if (particles[i].life <= 0 || particles[i].size <= 0.1) {
+        particles.splice(i, 1);
+      }
+    }
+    
+    requestAnimationFrame(animate);
+  }
+  
+  document.addEventListener('mousemove', (e) => {
+    addParticle(e.clientX, e.clientY);
+  });
+  
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+  
+  animate();
+}
+
+// Image Slider
+function initializeImageSlider() {
+  const sliderContainer = document.querySelector('.image-slider-container');
+  if (!sliderContainer) return;
+  
+  const slides = sliderContainer.querySelectorAll('.slide');
+  const prevBtn = sliderContainer.querySelector('.slider-nav.prev');
+  const nextBtn = sliderContainer.querySelector('.slider-nav.next');
+  const indicators = sliderContainer.querySelectorAll('.indicator');
+  
+  let currentSlide = 0;
+  let isAnimating = false;
+  let autoplayInterval;
+  
+  function showSlide(index) {
+    if (isAnimating || index === currentSlide) return;
+    
+    isAnimating = true;
+    const prevSlide = slides[currentSlide];
+    const nextSlide = slides[index];
+    
+    // GSAP animation
+    if (window.gsap) {
+      gsap.timeline()
+        .to(prevSlide, {
+          opacity: 0,
+          rotationY: -90,
+          scale: 0.8,
+          duration: 0.6,
+          ease: "power2.inOut"
+        })
+        .fromTo(nextSlide, 
+          {
+            opacity: 0,
+            rotationY: 90,
+            scale: 0.8
+          },
+          {
+            opacity: 1,
+            rotationY: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "power2.inOut",
+            onComplete: () => {
+              isAnimating = false;
+            }
+          }, "-=0.3"
+        );
+    } else {
+      // Fallback without GSAP
+      prevSlide.style.opacity = '0';
+      nextSlide.style.opacity = '1';
+      isAnimating = false;
+    }
+    
+    // Update indicators
+    indicators.forEach((indicator, i) => {
+      indicator.classList.toggle('active', i === index);
+    });
+    
+    currentSlide = index;
+  }
+  
+  function nextSlide() {
+    const next = (currentSlide + 1) % slides.length;
+    showSlide(next);
+  }
+  
+  function prevSlide() {
+    const prev = (currentSlide - 1 + slides.length) % slides.length;
+    showSlide(prev);
+  }
+  
+  function startAutoplay() {
+    autoplayInterval = setInterval(nextSlide, 4000);
+  }
+  
+  function stopAutoplay() {
+    clearInterval(autoplayInterval);
+  }
+  
+  // Event listeners
+  if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+  if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+  
+  indicators.forEach((indicator, index) => {
+    indicator.addEventListener('click', () => showSlide(index));
+  });
+  
+  // Pause autoplay on hover
+  sliderContainer.addEventListener('mouseenter', stopAutoplay);
+  sliderContainer.addEventListener('mouseleave', startAutoplay);
+  
+  // Initialize
+  showSlide(0);
+  startAutoplay();
+}
+
+// 3D Carousel
+function initialize3DCarousel() {
+  const carouselContainer = document.querySelector('.carousel-3d-container');
+  if (!carouselContainer) return;
+  
+  const carousel = carouselContainer.querySelector('.carousel-3d');
+  const items = carouselContainer.querySelectorAll('.carousel-item');
+  const prevBtn = carouselContainer.querySelector('.carousel-btn:first-child');
+  const nextBtn = carouselContainer.querySelector('.carousel-btn:last-child');
+  
+  let currentRotation = 0;
+  const itemCount = items.length;
+  const angleStep = 360 / itemCount;
+  const radius = 250;
+  
+  function positionItems() {
+    items.forEach((item, index) => {
+      const angle = (index * angleStep) + currentRotation;
+      const radian = (angle * Math.PI) / 180;
+      
+      const x = Math.sin(radian) * radius;
+      const z = Math.cos(radian) * radius;
+      
+      item.style.transform = `translate3d(${x}px, 0, ${z}px) rotateY(${-angle}deg)`;
+      
+      // Scale based on z position (closer items are larger)
+      const scale = (z + radius) / (radius * 2) * 0.5 + 0.5;
+      item.style.opacity = scale;
+    });
+  }
+  
+  function rotateCarousel(direction) {
+    currentRotation += direction * angleStep;
+    
+    if (window.gsap) {
+      gsap.to(carousel, {
+        rotationY: currentRotation,
+        duration: 0.8,
+        ease: "power2.inOut",
+        onUpdate: positionItems
+      });
+    } else {
+      carousel.style.transform = `rotateY(${currentRotation}deg)`;
+      positionItems();
+    }
+  }
+  
+  // Event listeners
+  if (prevBtn) prevBtn.addEventListener('click', () => rotateCarousel(1));
+  if (nextBtn) nextBtn.addEventListener('click', () => rotateCarousel(-1));
+  
+  // Initialize positions
+  positionItems();
+  
+  // Auto-rotate
+  setInterval(() => rotateCarousel(-1), 5000);
+}
+
+// Smooth Scroll Effects
+function initializeSmoothScroll() {
+  const scrollProgress = document.querySelector('.scroll-progress');
+  const backToTop = document.querySelector('.back-to-top');
+  
+  // Update scroll progress
+  function updateScrollProgress() {
+    const scrollTop = window.pageYOffset;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = (scrollTop / docHeight) * 100;
+    
+    if (scrollProgress) {
+      scrollProgress.style.width = `${scrollPercent}%`;
+    }
+    
+    // Show/hide back to top button
+    if (backToTop) {
+      if (scrollTop > 300) {
+        backToTop.style.opacity = '1';
+        backToTop.style.pointerEvents = 'auto';
+      } else {
+        backToTop.style.opacity = '0';
+        backToTop.style.pointerEvents = 'none';
+      }
+    }
+  }
+  
+  // Smooth scroll to top
+  if (backToTop) {
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Scroll event listener
+  window.addEventListener('scroll', updateScrollProgress);
+  
+  // Initialize
+  updateScrollProgress();
+}
+
+// Glass Navbar
+function initializeGlassNavbar() {
+  const navbar = document.querySelector('.glass-navbar');
+  if (!navbar) return;
+  
+  // Navbar scroll effect
+  function handleScroll() {
+    const scrollTop = window.pageYOffset;
+    
+    if (scrollTop > 50) {
+      navbar.style.background = 'rgba(255, 255, 255, 0.15)';
+      navbar.style.backdropFilter = 'blur(25px)';
+    } else {
+      navbar.style.background = 'rgba(255, 255, 255, 0.1)';
+      navbar.style.backdropFilter = 'blur(20px)';
+    }
+  }
+  
+  window.addEventListener('scroll', handleScroll);
+}
+
+// GSAP Animations
+function initializeGSAPAnimations() {
+  if (!window.gsap) return;
+  
+  // Animate elements on page load
+  gsap.from('.left-panel', {
+    x: -100,
+    opacity: 0,
+    duration: 1,
+    ease: "power2.out"
+  });
+  
+  gsap.from('.right-panel', {
+    x: 100,
+    opacity: 0,
+    duration: 1,
+    delay: 0.2,
+    ease: "power2.out"
+  });
+  
+  // Animate buttons on hover
+  const buttons = document.querySelectorAll('.btn, .glass-btn');
+  buttons.forEach(button => {
+    button.addEventListener('mouseenter', () => {
+      gsap.to(button, {
+        scale: 1.05,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    });
+    
+    button.addEventListener('mouseleave', () => {
+      gsap.to(button, {
+        scale: 1,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    });
+  });
+  
+  // Animate template cards
+  const templateCards = document.querySelectorAll('.template-card');
+  templateCards.forEach((card, index) => {
+    gsap.from(card, {
+      y: 50,
+      opacity: 0,
+      duration: 0.6,
+      delay: index * 0.1,
+      ease: "power2.out"
+    });
+  });
+  
+  // Parallax effect for background elements
+  gsap.registerPlugin(ScrollTrigger);
+  
+  gsap.to('body', {
+    backgroundPosition: '50% 100%',
+    ease: "none",
+    scrollTrigger: {
+      trigger: "body",
+      start: "top top",
+      end: "bottom top",
+      scrub: true
+    }
+  });
+}
