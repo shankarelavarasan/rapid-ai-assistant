@@ -599,6 +599,40 @@ class AnalyticsDashboard {
     }
     
     /**
+     * Get quality analytics with null safety
+     * @param {string} timeRange - Time range for analysis
+     * @returns {Object} Quality analytics
+     */
+    getQualityAnalytics(timeRange) {
+        const qualityMetrics = this.analyticsData?.qualityMetrics || {};
+        const docAnalytics = this.analyticsData?.documentAnalytics || {};
+        
+        return {
+            confidenceScores: {
+                average: qualityMetrics.averageConfidence || 0,
+                distribution: qualityMetrics.confidenceDistribution || {},
+                trends: this.calculateConfidenceTrends?.(timeRange) || { trend: 'stable' }
+            },
+            accuracyMetrics: {
+                ocrAccuracy: qualityMetrics.ocrAccuracy || 0,
+                languageAccuracy: qualityMetrics.languageAccuracy || {},
+                documentTypeAccuracy: qualityMetrics.documentTypeAccuracy || {}
+            },
+            qualityIssues: {
+                lowConfidenceDocuments: qualityMetrics.lowConfidenceCount || 0,
+                processingErrors: qualityMetrics.processingErrors || 0,
+                qualityAlerts: this.generateQualityAlerts?.() || []
+            },
+            improvementSuggestions: this.generateQualityImprovements?.() || [],
+            qualityTrends: {
+                overall: this.calculateOverallQualityTrend?.(timeRange) || { trend: 'stable' },
+                byLanguage: this.calculateLanguageQualityTrends?.(timeRange) || {},
+                byDocumentType: this.calculateDocumentTypeQualityTrends?.(timeRange) || {}
+            }
+        };
+    }
+    
+    /**
      * Generate insights from analytics data
      * @param {string} timeRange - Time range for analysis
      * @returns {Array} Generated insights

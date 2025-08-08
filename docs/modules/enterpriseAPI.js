@@ -775,6 +775,107 @@ class EnterpriseAPI {
     }
     
     /**
+     * Initialize rate limiting for API requests
+     */
+    initializeRateLimiting() {
+        // Initialize rate limiting configuration
+        this.rateLimits = new Map();
+        this.rateLimitConfig = {
+            defaultLimit: 100, // requests per minute
+            defaultWindow: 60000, // 1 minute in milliseconds
+            integrationLimits: {
+                googleDrive: { limit: 1000, window: 60000 },
+                dropbox: { limit: 500, window: 60000 },
+                salesforce: { limit: 200, window: 60000 },
+                hubspot: { limit: 100, window: 60000 },
+                zapier: { limit: 50, window: 60000 }
+            }
+        };
+        
+        // Initialize rate limit tracking for each integration
+        for (const integrationName of Object.keys(this.integrations)) {
+            this.rateLimits.set(integrationName, {
+                requests: [],
+                blocked: false,
+                resetTime: null
+            });
+        }
+        
+        console.log('Rate limiting initialized successfully');
+    }
+    
+    /**
+     * Check if request is within rate limit
+     * @param {string} integration - Integration name
+     * @returns {boolean} Whether request is allowed
+     */
+    checkRateLimit(integration) {
+        const now = Date.now();
+        const rateLimitData = this.rateLimits.get(integration);
+        
+        if (!rateLimitData) {
+            return true; // No rate limit configured
+        }
+        
+        const config = this.rateLimitConfig.integrationLimits[integration] || {
+            limit: this.rateLimitConfig.defaultLimit,
+            window: this.rateLimitConfig.defaultWindow
+        };
+        
+        // Remove old requests outside the window
+        rateLimitData.requests = rateLimitData.requests.filter(
+            timestamp => now - timestamp < config.window
+        );
+        
+        // Check if within limit
+        if (rateLimitData.requests.length >= config.limit) {
+            rateLimitData.blocked = true;
+            rateLimitData.resetTime = now + config.window;
+            return false;
+        }
+        
+        // Add current request
+        rateLimitData.requests.push(now);
+        rateLimitData.blocked = false;
+        return true;
+    }
+    
+    /**
+     * Get rate limit status for an integration
+     * @param {string} integration - Integration name
+     * @returns {Object} Rate limit status
+     */
+    getRateLimitStatus(integration) {
+        const rateLimitData = this.rateLimits.get(integration);
+        
+        if (!rateLimitData) {
+            return {
+                blocked: false,
+                remaining: this.rateLimitConfig.defaultLimit,
+                resetTime: null
+            };
+        }
+        
+        const config = this.rateLimitConfig.integrationLimits[integration] || {
+            limit: this.rateLimitConfig.defaultLimit,
+            window: this.rateLimitConfig.defaultWindow
+        };
+        
+        const now = Date.now();
+        const validRequests = rateLimitData.requests.filter(
+            timestamp => now - timestamp < config.window
+        );
+        
+        return {
+            blocked: rateLimitData.blocked,
+            remaining: Math.max(0, config.limit - validRequests.length),
+            resetTime: rateLimitData.resetTime,
+            limit: config.limit,
+            window: config.window
+        };
+    }
+    
+    /**
      * Check if Enterprise API is ready
      * @returns {boolean} Ready status
      */

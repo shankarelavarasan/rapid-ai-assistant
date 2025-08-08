@@ -1037,6 +1037,185 @@ class CollaborationTools {
 
     
     /**
+     * Initialize WebSocket connection
+     * @returns {Promise<void>}
+     */
+    async initializeWebSocket() {
+        try {
+            console.log('Initializing WebSocket connection...');
+            
+            // Check if WebSocket is supported
+            if (typeof WebSocket === 'undefined') {
+                console.warn('WebSocket not supported in this environment');
+                return;
+            }
+            
+            this.connectionState = 'connecting';
+            
+            // Create WebSocket connection with error handling
+            this.websocket = new WebSocket(this.config.websocketUrl);
+            
+            // Set up event handlers
+            this.websocket.onopen = (event) => {
+                console.log('WebSocket connected successfully');
+                this.connectionState = 'connected';
+                this.reconnectAttempts = this.config.reconnectAttempts;
+                this.reconnectDelay = 1000;
+                
+                // Start heartbeat
+                this.startHeartbeat();
+                
+                // Send queued messages
+                this.processMessageQueue();
+            };
+            
+            this.websocket.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    this.handleWebSocketMessage(message);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+            
+            this.websocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                this.connectionState = 'error';
+                
+                // Don't attempt reconnection for localhost when server is not running
+                if (this.config.websocketUrl.includes('localhost')) {
+                    console.warn('WebSocket server not available on localhost. Real-time features disabled.');
+                    this.connectionState = 'disconnected';
+                    return;
+                }
+                
+                this.attemptReconnection();
+            };
+            
+            this.websocket.onclose = (event) => {
+                console.log('WebSocket connection closed:', event.code, event.reason);
+                this.connectionState = 'disconnected';
+                this.stopHeartbeat();
+                
+                // Attempt reconnection if not intentionally closed
+                if (event.code !== 1000 && this.reconnectAttempts > 0) {
+                    this.attemptReconnection();
+                }
+            };
+            
+        } catch (error) {
+            console.error('Failed to initialize WebSocket:', error);
+            this.connectionState = 'error';
+        }
+    }
+    
+    /**
+     * Handle WebSocket messages
+     * @param {Object} message - Received message
+     */
+    handleWebSocketMessage(message) {
+        switch (message.type) {
+            case 'heartbeat':
+                this.lastHeartbeat = Date.now();
+                break;
+            case 'user_joined':
+                this.onlineUsers.add(message.userId);
+                break;
+            case 'user_left':
+                this.onlineUsers.delete(message.userId);
+                break;
+            case 'file_shared':
+            case 'comment_added':
+            case 'workspace_created':
+                this.triggerEventHandlers(message.eventType, message);
+                break;
+            default:
+                console.log('Unknown WebSocket message type:', message.type);
+        }
+    }
+    
+    /**
+     * Start heartbeat to keep connection alive
+     */
+    startHeartbeat() {
+        this.stopHeartbeat();
+        this.heartbeatTimer = setInterval(() => {
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.sendMessage({ type: 'heartbeat', timestamp: Date.now() });
+            }
+        }, this.config.heartbeatInterval);
+    }
+    
+    /**
+     * Stop heartbeat timer
+     */
+    stopHeartbeat() {
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+    }
+    
+    /**
+     * Attempt to reconnect WebSocket
+     */
+    attemptReconnection() {
+        if (this.reconnectAttempts <= 0) {
+            console.error('Max reconnection attempts reached');
+            return;
+        }
+        
+        this.reconnectAttempts--;
+        console.log(`Attempting to reconnect WebSocket in ${this.reconnectDelay}ms... (${this.reconnectAttempts} attempts left)`);
+        
+        setTimeout(() => {
+            this.initializeWebSocket();
+        }, this.reconnectDelay);
+        
+        // Exponential backoff
+        this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+    }
+    
+    /**
+     * Send message through WebSocket
+     * @param {Object} message - Message to send
+     */
+    sendMessage(message) {
+        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            this.websocket.send(JSON.stringify(message));
+        } else {
+            // Queue message for later
+            this.messageQueue.push(message);
+        }
+    }
+    
+    /**
+     * Process queued messages
+     */
+    processMessageQueue() {
+        while (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift();
+            this.sendMessage(message);
+        }
+    }
+    
+    /**
+     * Trigger event handlers
+     * @param {string} eventType - Event type
+     * @param {Object} data - Event data
+     */
+    triggerEventHandlers(eventType, data) {
+        const handlers = this.eventHandlers.get(eventType) || [];
+        handlers.forEach(handler => {
+            try {
+                handler(data);
+            } catch (error) {
+                console.error(`Error in event handler for ${eventType}:`, error);
+            }
+        });
+    }
+    
+    /**
      * Generate unique ID
      * @returns {string} Unique ID
      */

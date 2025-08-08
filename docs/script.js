@@ -562,8 +562,8 @@ function updateCollaborationDisplay() {
     
     if (workspaceDetailsEl && status.currentWorkspace) {
       workspaceDetailsEl.innerHTML = `
-        <div>Workspace: ${status.currentWorkspace.name}</div>
-        <div>Members: ${status.currentWorkspace.members}</div>
+        <div>Workspace: ${status.currentWorkspace?.name || 'Unknown'}</div>
+        <div>Members: ${status.currentWorkspace?.members || 0}</div>
       `;
     }
   }
