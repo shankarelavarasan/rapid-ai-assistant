@@ -69,7 +69,7 @@ function loadTemplateFiles(files) {
 
 function applyTemplate(templateName) {
   const promptTextarea = document.getElementById('promptTextarea');
-  if (!promptTextarea) return;
+  if (!promptTextarea) {return;}
 
   promptTextarea.value = `Using template: ${templateName}`;
 

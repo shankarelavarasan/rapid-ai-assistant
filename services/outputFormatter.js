@@ -214,7 +214,7 @@ export function generateSummary(data, validation) {
 export function cleanupOldFiles(maxAgeHours = 24) {
     try {
         const outputDir = path.join(process.cwd(), 'output');
-        if (!fs.existsSync(outputDir)) return;
+        if (!fs.existsSync(outputDir)) {return;}
         
         const files = fs.readdirSync(outputDir);
         const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);

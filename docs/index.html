@@ -39,19 +39,27 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="workspace">Workspace</button>
                 <button class="nav-tab" data-tab="templates">Templates</button>
+                <button class="nav-tab" data-tab="analytics">Analytics</button>
+                <button class="nav-tab" data-tab="collaboration">Collaboration</button>
                 <button class="nav-tab" data-tab="settings">Settings</button>
             </div>
             
             <!-- Workspace Tab -->
             <div class="tab-content active" id="workspace-tab">
             <div class="panel-section">
-                <h3>File/Folder Selection</h3>
+                <h3>📁 Enhanced File/Folder Selection</h3>
                 <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx,.doc,.rtf,.odt" style="display: none;">
                 <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
-                <button id="selectFileBtn" name="selectFileBtn">Select File</button>
-                <button id="selectFolderBtn" name="selectFolderBtn">Select Folder</button>
+                <div class="file-selection-buttons">
+                    <button id="selectFileBtn" name="selectFileBtn" class="btn btn-outline">📄 Select Files</button>
+                    <button id="selectFolderBtn" name="selectFolderBtn" class="btn btn-outline enhanced-folder-btn">📁 Select Folder</button>
+                </div>
                 <div id="selectedFiles" name="selectedFilesContainer"></div>
-                <div id="folderStats" name="folderStats"></div>
+                <div id="folderStats" name="folderStats" class="folder-stats"></div>
+                <div class="processing-mode-indicator" id="processingModeIndicator" style="display: none;">
+                    <span class="mode-badge">🤖 Enhanced AI Mode</span>
+                    <small>Using intelligent document processing pipeline</small>
+                </div>
             </div>
             <div id="progressContainer" style="display: none; margin: 10px 0;">
                 <div style="background: #f0f0f0; border-radius: 4px; height: 20px;">
@@ -117,6 +125,168 @@
                 </div>
             </div>
             
+            <!-- Analytics Tab -->
+            <div class="tab-content" id="analytics-tab">
+                <div class="panel-section">
+                    <h3>📊 Processing Analytics</h3>
+                    <div class="analytics-summary">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProcessed">0</div>
+                            <div class="stat-label">Files Processed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgProcessingTime">0s</div>
+                            <div class="stat-label">Avg Processing Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="successRate">100%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-charts">
+                        <div class="chart-container">
+                            <h4>Document Types Processed</h4>
+                            <canvas id="documentTypesChart" width="300" height="200"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h4>Processing Performance</h4>
+                            <canvas id="performanceChart" width="300" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-controls">
+                        <button class="btn btn-outline btn-sm" id="exportAnalyticsBtn">📊 Export Analytics</button>
+                        <button class="btn btn-outline btn-sm" id="resetAnalyticsBtn">🔄 Reset Data</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>🗂️ File Organization</h3>
+                    <div class="organization-settings">
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="autoOrganize"> Auto-organize files
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label for="organizationStrategy">Organization Strategy</label>
+                            <select id="organizationStrategy">
+                                <option value="smart">Smart (AI-based)</option>
+                                <option value="date">By Date</option>
+                                <option value="type">By File Type</option>
+                                <option value="content">By Content</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="smartRename"> Smart file renaming
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="organization-actions">
+                        <button class="btn btn-outline btn-sm" id="organizeNowBtn">🗂️ Organize Files</button>
+                        <button class="btn btn-outline btn-sm" id="previewOrganizationBtn">👁️ Preview Organization</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Collaboration Tab -->
+            <div class="tab-content" id="collaboration-tab">
+                <div class="panel-section">
+                    <h3>👥 Team Workspace</h3>
+                    <div class="workspace-info">
+                        <div class="workspace-status">
+                            <span class="status-indicator offline" id="workspaceStatus"></span>
+                            <span id="workspaceStatusText">Not connected</span>
+                        </div>
+                        <div class="workspace-actions">
+                            <button class="btn btn-primary btn-sm" id="createWorkspaceBtn">+ Create Workspace</button>
+                            <button class="btn btn-outline btn-sm" id="joinWorkspaceBtn">🔗 Join Workspace</button>
+                        </div>
+                    </div>
+                    
+                    <div class="workspace-details" id="workspaceDetails" style="display: none;">
+                        <div class="workspace-name">
+                            <strong>Workspace:</strong> <span id="currentWorkspaceName">-</span>
+                        </div>
+                        <div class="workspace-members">
+                            <strong>Members:</strong> <span id="memberCount">0</span>
+                            <div id="membersList" class="members-list"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>📤 File Sharing</h3>
+                    <div class="sharing-options">
+                        <div class="setting-item">
+                            <label for="sharePermissions">Default Permissions</label>
+                            <select id="sharePermissions">
+                                <option value="view">View Only</option>
+                                <option value="comment">Can Comment</option>
+                                <option value="edit">Can Edit</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="shareNotifications"> Notify on share
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="sharing-actions">
+                        <button class="btn btn-outline btn-sm" id="shareCurrentFileBtn">📤 Share Current File</button>
+                        <button class="btn btn-outline btn-sm" id="viewSharedFilesBtn">📋 View Shared Files</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>💬 Comments & Feedback</h3>
+                    <div class="comments-container">
+                        <div id="commentsList" class="comments-list">
+                            <p class="no-comments">No comments yet</p>
+                        </div>
+                        <div class="comment-input">
+                            <textarea id="newComment" placeholder="Add a comment..." rows="2"></textarea>
+                            <button class="btn btn-primary btn-sm" id="addCommentBtn">💬 Add Comment</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>🔗 Enterprise Integrations</h3>
+                    <div class="integrations-list">
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <span class="integration-name">Google Drive</span>
+                                <span class="integration-status disconnected" id="googleDriveStatus">Disconnected</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" id="connectGoogleDriveBtn">Connect</button>
+                        </div>
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <span class="integration-name">Slack</span>
+                                <span class="integration-status disconnected" id="slackStatus">Disconnected</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" id="connectSlackBtn">Connect</button>
+                        </div>
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <span class="integration-name">Salesforce</span>
+                                <span class="integration-status disconnected" id="salesforceStatus">Disconnected</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" id="connectSalesforceBtn">Connect</button>
+                        </div>
+                    </div>
+                    
+                    <div class="integration-actions">
+                        <button class="btn btn-outline btn-sm" id="manageIntegrationsBtn">⚙️ Manage Integrations</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Settings Tab -->
             <div class="tab-content" id="settings-tab">
                 <div class="panel-section">
@@ -169,13 +339,13 @@
                 <!-- Chat messages will be appended here -->
             </div>
             <div id="previewContainer" name="previewContainerDiv" style="display: none;">
-                <h3>Output Preview</h3>
-                <div id="previewContent" name="previewContentDiv"></div>
+                <h3>📊 Output Preview</h3>
+                <div id="previewContent" name="previewContentDiv" class="preview-content"></div>
                 <div class="export-options">
-                    <button id="exportPdfBtn" name="exportPdfBtn">Export as PDF</button>
-                    <button id="exportWordBtn" name="exportWordBtn">Export as Word</button>
-                    <button id="exportExcelBtn" name="exportExcelBtn">Export as Excel</button>
-                    <button id="exportTextBtn" name="exportTextBtn">Export as Text</button>
+                    <button id="exportPdfBtn" name="exportPdfBtn" class="btn btn-outline">📄 Export PDF</button>
+                    <button id="exportWordBtn" name="exportWordBtn" class="btn btn-outline">📝 Export Word</button>
+                    <button id="exportExcelBtn" name="exportExcelBtn" class="btn btn-outline">📊 Export Excel</button>
+                    <button id="exportTextBtn" name="exportTextBtn" class="btn btn-outline">📋 Export Text</button>
                 </div>
             </div>
             <div class="prompt-container">

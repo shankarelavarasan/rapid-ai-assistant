@@ -61,7 +61,7 @@ class SystemTester {
         ];
 
         let passed = 0;
-        let total = requiredFiles.length + requiredDirs.length;
+        const total = requiredFiles.length + requiredDirs.length;
 
         for (const file of requiredFiles) {
             const filePath = path.join(__dirname, file);
@@ -186,7 +186,7 @@ class SystemTester {
         const outputDir = path.join(__dirname, 'output');
         
         let passed = 0;
-        let total = 2;
+        const total = 2;
 
         try {
             if (!fs.existsSync(uploadsDir)) {

@@ -15,7 +15,7 @@ class ErrorHandler {
     console.error(`[${type}]`, error);
 
     // Format error message for display
-    let userMessage = this.getUserFriendlyMessage(error, type);
+    const userMessage = this.getUserFriendlyMessage(error, type);
 
     // Return formatted error object
     return {

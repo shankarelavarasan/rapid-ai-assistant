@@ -69,7 +69,7 @@ export function initializeFileSelection() {
   }
 
   function displaySelectedFiles(files) {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {return;}
 
     selectedFilesDiv.innerHTML = '';
     const filesArray = Array.from(files);
@@ -96,7 +96,7 @@ export function initializeFileSelection() {
   }
 
   function updateFolderStats(files) {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {return;}
 
     const filesArray = Array.from(files);
     const totalSize = filesArray.reduce((sum, file) => sum + file.size, 0);
@@ -127,7 +127,7 @@ export function initializeFileSelection() {
   }
 
   function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

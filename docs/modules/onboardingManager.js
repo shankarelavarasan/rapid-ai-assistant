@@ -101,7 +101,7 @@ class OnboardingManager {
      * Start the onboarding process
      */
     startOnboarding() {
-        if (this.isActive) return;
+        if (this.isActive) {return;}
         
         this.defineSteps();
         this.isActive = true;
@@ -244,11 +244,11 @@ class OnboardingManager {
         }
         
         // Ensure tooltip stays within viewport
-        if (left < 16) left = 16;
+        if (left < 16) {left = 16;}
         if (left + tooltipRect.width > viewportWidth - 16) {
             left = viewportWidth - tooltipRect.width - 16;
         }
-        if (top < 16) top = 16;
+        if (top < 16) {top = 16;}
         if (top + tooltipRect.height > viewportHeight - 16) {
             top = viewportHeight - tooltipRect.height - 16;
         }
@@ -367,7 +367,7 @@ class OnboardingManager {
      */
     showContextualTooltip(selector, title, content, duration = 5000) {
         const element = document.querySelector(selector);
-        if (!element) return;
+        if (!element) {return;}
 
         const tooltip = document.createElement('div');
         tooltip.className = 'contextual-tooltip';

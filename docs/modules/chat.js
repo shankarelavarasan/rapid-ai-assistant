@@ -4,7 +4,7 @@ let activeProject = null;
 
 function addMessageToChat(sender, message) {
   const chatContainer = document.getElementById('chat-container');
-  if (!chatContainer) return;
+  if (!chatContainer) {return;}
 
   const messageElement = document.createElement('div');
   messageElement.classList.add('chat-message', `${sender}-message`);
@@ -32,7 +32,7 @@ function addMessageToChat(sender, message) {
 
 const handleAsk = () => {
   const userInput = document.getElementById('userInput');
-  if (!userInput) return;
+  if (!userInput) {return;}
 
   const question = userInput.value.trim();
   if (question && activeProject) {

@@ -99,7 +99,7 @@ export class IntegratedProcessor {
     if (templateValue === 'custom') {
       // Trigger file selection for custom template
       const templateBtn = document.getElementById('selectTemplateFileBtn');
-      if (templateBtn) templateBtn.click();
+      if (templateBtn) {templateBtn.click();}
     } else {
       // Handle predefined templates
       uiManager.addMessage(`Template selected: ${templateValue}`, 'ai');

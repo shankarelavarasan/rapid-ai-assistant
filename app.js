@@ -4,7 +4,7 @@ let templateFile = null;
 let processingData = null;
 let currentStep = 1;
 let socket = null;
-let chatMessages = [];
+const chatMessages = [];
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
@@ -363,7 +363,7 @@ function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const message = chatInput.value.trim();
     
-    if (!message) return;
+    if (!message) {return;}
     
     addChatMessage('You', message, 'user');
     chatInput.value = '';
@@ -402,7 +402,7 @@ function addChatMessage(sender, message, type) {
 
 // Utility Functions
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

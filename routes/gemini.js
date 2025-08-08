@@ -75,7 +75,7 @@ router.post('/ask-gemini', async (req, res) => {
 
     // Initialize Gemini model
     const model = getGeminiModel(process.env.GEMINI_API_KEY);
-    let responses = [];
+    const responses = [];
 
     // Process template if provided
     let templateText = '';
@@ -312,7 +312,7 @@ router.get('/job/:jobId', async (req, res) => {
     res.json(status);
   } catch (err) {
     console.error('Error getting job status:', err);
-    let status = 500;
+    const status = 500;
     let message = 'Something went wrong while getting job status.';
 
     if (err.message) {

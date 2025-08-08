@@ -24,7 +24,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Get port from command line arguments or environment variable
+const portArg = process.argv.find(arg => arg.startsWith('--port='));
+const PORT = portArg ? parseInt(portArg.split('=')[1]) : (process.env.PORT || 3000);
 
 // Create HTTP server and Socket.IO instance for real-time progress updates
 const httpServer = createServer(app);

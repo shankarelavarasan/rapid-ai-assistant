@@ -7,7 +7,7 @@ export function createProject(name) {
     tasks: [],
     created: new Date().toISOString(),
   };
-  let projects = JSON.parse(localStorage.getItem('projects')) || [];
+  const projects = JSON.parse(localStorage.getItem('projects')) || [];
   projects.push(project);
   localStorage.setItem('projects', JSON.stringify(projects));
   return project;
@@ -23,7 +23,7 @@ export function getProject(id) {
 }
 
 export function updateProject(updatedProject) {
-  let projects = getProjects();
+  const projects = getProjects();
   const index = projects.findIndex(p => p.id === updatedProject.id);
   if (index !== -1) {
     projects[index] = updatedProject;

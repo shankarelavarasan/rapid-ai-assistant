@@ -200,8 +200,8 @@ class ToastManager {
             const messageEl = toast.querySelector('.toast-message');
             const iconEl = toast.querySelector('.toast-icon');
             
-            if (messageEl) messageEl.textContent = message;
-            if (iconEl) iconEl.innerHTML = this.getIcon(type);
+            if (messageEl) {messageEl.textContent = message;}
+            if (iconEl) {iconEl.innerHTML = this.getIcon(type);}
             
             // Add close button if it doesn't exist
             if (!toast.querySelector('.toast-close')) {

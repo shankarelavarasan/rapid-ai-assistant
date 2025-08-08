@@ -73,7 +73,7 @@ export function initializeFileManager() {
   }
 
   function updateFolderStats(files) {
-    if (!folderStats) return;
+    if (!folderStats) {return;}
     
     const validFiles = Array.from(files).filter(validateFile);
     const totalFiles = files.length;
@@ -87,7 +87,7 @@ export function initializeFileManager() {
   }
 
   function displaySelectedFiles(files) {
-    if (!selectedFilesDiv) return;
+    if (!selectedFilesDiv) {return;}
     
     selectedFilesDiv.innerHTML = ''; // Clear previous selections
     stateManager.setSelectedFiles([]);

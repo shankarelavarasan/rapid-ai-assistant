@@ -49,7 +49,7 @@ router.post('/process-file', upload.fields([
 async function processFileWithGemini(file, prompt, templateFile) {
   try {
     let fileContent = '';
-    let extractedData = {};
+    const extractedData = {};
 
     // Read file based on type
     if (file.mimetype === 'application/pdf') {
