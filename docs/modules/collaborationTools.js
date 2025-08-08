@@ -53,6 +53,11 @@ class CollaborationTools {
         this.eventHandlers = new Map();
         this.messageQueue = [];
         this.reconnectAttempts = this.config.reconnectAttempts;
+        this.connectionState = 'disconnected'; // 'connecting', 'connected', 'disconnected', 'error'
+        this.reconnectDelay = 1000; // Start with 1 second
+        this.maxReconnectDelay = 30000; // Max 30 seconds
+        this.heartbeatTimer = null;
+        this.lastHeartbeat = null;
         
         // Activity tracking
         this.activityLog = [];
@@ -514,59 +519,205 @@ class CollaborationTools {
     // Helper methods
     
     /**
-     * Initialize WebSocket connection
+     * Initialize WebSocket connection with improved error handling
      * @returns {Promise<void>}
      */
     async initializeWebSocket() {
         return new Promise((resolve, reject) => {
             try {
+                // Check if already connecting or connected
+                if (this.connectionState === 'connecting' || this.connectionState === 'connected') {
+                    resolve();
+                    return;
+                }
+                
+                this.connectionState = 'connecting';
+                console.log(`Connecting to WebSocket: ${this.config.websocketUrl}`);
+                
+                // Close existing connection if any
+                if (this.websocket) {
+                    this.websocket.close();
+                }
+                
                 this.websocket = new WebSocket(this.config.websocketUrl);
                 
+                // Set connection timeout
+                const connectionTimeout = setTimeout(() => {
+                    if (this.connectionState === 'connecting') {
+                        this.websocket.close();
+                        this.connectionState = 'error';
+                        reject(new Error('WebSocket connection timeout'));
+                    }
+                }, 10000); // 10 second timeout
+                
                 this.websocket.onopen = () => {
-                    console.log('WebSocket connected');
-                    this.sendMessage({
-                        type: 'user_online',
-                        user: this.currentUser
-                    });
+                    clearTimeout(connectionTimeout);
+                    this.connectionState = 'connected';
+                    this.reconnectAttempts = this.config.reconnectAttempts; // Reset attempts
+                    this.reconnectDelay = 1000; // Reset delay
+                    
+                    console.log('WebSocket connected successfully');
+                    
+                    // Send user online status
+                    if (this.currentUser) {
+                        this.sendMessage({
+                            type: 'user_online',
+                            user: this.currentUser,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
+                    // Process queued messages
+                    this.processMessageQueue();
+                    
+                    // Start heartbeat
+                    this.startHeartbeat();
+                    
                     resolve();
                 };
                 
                 this.websocket.onmessage = (event) => {
-                    this.handleWebSocketMessage(JSON.parse(event.data));
+                    try {
+                        const message = JSON.parse(event.data);
+                        
+                        // Handle heartbeat response
+                        if (message.type === 'pong') {
+                            this.lastHeartbeat = Date.now();
+                            return;
+                        }
+                        
+                        this.handleWebSocketMessage(message);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
                 };
                 
-                this.websocket.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    this.handleWebSocketReconnect();
+                this.websocket.onclose = (event) => {
+                    clearTimeout(connectionTimeout);
+                    this.stopHeartbeat();
+                    
+                    if (this.connectionState === 'connected') {
+                        console.log(`WebSocket disconnected: ${event.code} - ${event.reason}`);
+                        this.connectionState = 'disconnected';
+                        this.handleWebSocketReconnect();
+                    }
                 };
                 
                 this.websocket.onerror = (error) => {
+                    clearTimeout(connectionTimeout);
+                    this.connectionState = 'error';
                     console.error('WebSocket error:', error);
-                    reject(error);
+                    
+                    // Don't reject immediately, let reconnection handle it
+                    if (this.reconnectAttempts === this.config.reconnectAttempts) {
+                        reject(error);
+                    }
                 };
+                
             } catch (error) {
+                this.connectionState = 'error';
+                console.error('Failed to create WebSocket connection:', error);
                 reject(error);
             }
         });
     }
     
     /**
-     * Handle WebSocket reconnection
+     * Handle WebSocket reconnection with exponential backoff
      */
     handleWebSocketReconnect() {
-        if (this.reconnectAttempts > 0) {
+        if (this.reconnectAttempts > 0 && this.connectionState !== 'connecting') {
             this.reconnectAttempts--;
-            console.log(`Attempting to reconnect WebSocket... (${this.config.reconnectAttempts - this.reconnectAttempts}/${this.config.reconnectAttempts})`);
             
-            setTimeout(() => {
-                this.initializeWebSocket().catch(error => {
+            console.log(`Attempting to reconnect WebSocket... (${this.config.reconnectAttempts - this.reconnectAttempts}/${this.config.reconnectAttempts})`);
+            console.log(`Reconnecting in ${this.reconnectDelay}ms`);
+            
+            setTimeout(async () => {
+                try {
+                    await this.initializeWebSocket();
+                    console.log('WebSocket reconnection successful');
+                } catch (error) {
                     console.error('WebSocket reconnection failed:', error);
+                    
+                    // Exponential backoff
+                    this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+                    
                     if (this.reconnectAttempts === 0) {
-                        console.error('Max reconnection attempts reached');
+                        console.error('Max reconnection attempts reached. WebSocket will remain disconnected.');
+                        this.connectionState = 'error';
+                        
+                        // Notify application about connection failure
+                        this.handleRealTimeEvent({
+                            type: 'connection_failed',
+                            data: {
+                                error: 'Max reconnection attempts reached',
+                                timestamp: Date.now()
+                            }
+                        });
+                    } else {
+                        // Continue trying to reconnect
+                        this.handleWebSocketReconnect();
                     }
-                });
-            }, 5000); // Wait 5 seconds before reconnecting
+                }
+            }, this.reconnectDelay);
         }
+    }
+    
+    /**
+     * Start heartbeat to monitor connection health
+     */
+    startHeartbeat() {
+        this.stopHeartbeat(); // Clear any existing heartbeat
+        
+        this.heartbeatTimer = setInterval(() => {
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.sendMessage({
+                    type: 'ping',
+                    timestamp: Date.now()
+                });
+                
+                // Check if last heartbeat was too long ago
+                if (this.lastHeartbeat && (Date.now() - this.lastHeartbeat) > this.config.heartbeatInterval * 2) {
+                    console.warn('Heartbeat timeout detected, forcing reconnection');
+                    this.websocket.close();
+                }
+            }
+        }, this.config.heartbeatInterval);
+    }
+    
+    /**
+     * Stop heartbeat timer
+     */
+    stopHeartbeat() {
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+    }
+    
+    /**
+     * Process queued messages after reconnection
+     */
+    processMessageQueue() {
+        while (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift();
+            this.sendMessage(message);
+        }
+    }
+    
+    /**
+     * Get connection status
+     * @returns {Object} Connection status information
+     */
+    getConnectionStatus() {
+        return {
+            state: this.connectionState,
+            isConnected: this.websocket?.readyState === WebSocket.OPEN,
+            reconnectAttempts: this.reconnectAttempts,
+            maxReconnectAttempts: this.config.reconnectAttempts,
+            lastHeartbeat: this.lastHeartbeat,
+            queuedMessages: this.messageQueue.length
+        };
     }
     
     /**

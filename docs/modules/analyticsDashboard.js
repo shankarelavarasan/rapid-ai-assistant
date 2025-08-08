@@ -352,16 +352,55 @@ class AnalyticsDashboard {
      */
     async exportToPDF(reportData) {
         try {
-            // Create a simple PDF structure without jsPDF for now
-            const pdfData = {
-                type: 'pdf',
-                content: this.formatReportForPDF(reportData),
-                filename: `analytics-report-${Date.now()}.pdf`,
-                success: true
-            };
-            
-            console.log('PDF report generated successfully');
-            return pdfData;
+            // Check if jsPDF is available
+            if (typeof window !== 'undefined' && window.jsPDF) {
+                const { jsPDF } = window;
+                const doc = new jsPDF();
+                
+                // Add report title
+                doc.setFontSize(20);
+                doc.text('Analytics Report', 20, 30);
+                
+                // Add metadata
+                doc.setFontSize(12);
+                doc.text(`Generated: ${reportData.metadata.generatedAt}`, 20, 50);
+                doc.text(`Time Range: ${reportData.metadata.timeRange}`, 20, 60);
+                
+                // Add summary data
+                let yPosition = 80;
+                const summary = reportData.data.summary;
+                if (summary) {
+                    doc.text('Summary:', 20, yPosition);
+                    yPosition += 10;
+                    doc.text(`Total Processed: ${summary.totalProcessed || 0}`, 30, yPosition);
+                    yPosition += 10;
+                    doc.text(`Success Rate: ${(summary.successRate || 0).toFixed(2)}%`, 30, yPosition);
+                    yPosition += 10;
+                    doc.text(`Avg Processing Time: ${(summary.averageProcessingTime || 0).toFixed(2)}ms`, 30, yPosition);
+                }
+                
+                // Save the PDF
+                const filename = `analytics-report-${Date.now()}.pdf`;
+                doc.save(filename);
+                
+                return {
+                    type: 'pdf',
+                    filename: filename,
+                    success: true
+                };
+            } else {
+                // Fallback: Create a simple PDF structure without jsPDF
+                const pdfData = {
+                    type: 'pdf',
+                    content: this.formatReportForPDF(reportData),
+                    filename: `analytics-report-${Date.now()}.pdf`,
+                    success: true,
+                    note: 'jsPDF not available, using fallback format'
+                };
+                
+                console.log('PDF report generated successfully (fallback mode)');
+                return pdfData;
+            }
         } catch (error) {
             console.error('Error exporting to PDF:', error);
             return { success: false, error: error.message };
@@ -458,99 +497,104 @@ class AnalyticsDashboard {
     }
     
     /**
-     * Generate summary metrics
+     * Generate summary metrics with null safety
      * @param {string} timeRange - Time range for analysis
      * @returns {Object} Summary metrics
      */
     generateSummaryMetrics(timeRange) {
-        const metrics = this.analyticsData.processingMetrics;
+        const metrics = this.analyticsData?.processingMetrics || {};
+        const totalProcessed = metrics.totalProcessed || 0;
+        const successfulProcessing = metrics.successfulProcessing || 0;
+        const failedProcessing = metrics.failedProcessing || 0;
         
         return {
-            totalProcessed: metrics.totalProcessed,
-            successRate: metrics.totalProcessed > 0 ? 
-                (metrics.successfulProcessing / metrics.totalProcessed) * 100 : 0,
-            averageProcessingTime: metrics.averageProcessingTime,
-            totalErrors: metrics.failedProcessing,
-            errorRate: metrics.totalProcessed > 0 ? 
-                (metrics.failedProcessing / metrics.totalProcessed) * 100 : 0,
+            totalProcessed: totalProcessed,
+            successRate: totalProcessed > 0 ? 
+                (successfulProcessing / totalProcessed) * 100 : 0,
+            averageProcessingTime: metrics.averageProcessingTime || 0,
+            totalErrors: failedProcessing,
+            errorRate: totalProcessed > 0 ? 
+                (failedProcessing / totalProcessed) * 100 : 0,
             timeRange: timeRange,
             lastUpdated: new Date().toISOString()
         };
     }
     
     /**
-     * Get processing analytics
+     * Get processing analytics with null safety
      * @param {string} timeRange - Time range for analysis
      * @returns {Object} Processing analytics
      */
     getProcessingAnalytics(timeRange) {
-        const metrics = this.analyticsData.processingMetrics;
+        const metrics = this.analyticsData?.processingMetrics || {};
         
         return {
-            volumeTrends: this.calculateVolumeTrends(timeRange),
-            performanceTrends: this.calculatePerformanceTrends(timeRange),
-            processingTimeDistribution: this.calculateProcessingTimeDistribution(),
+            volumeTrends: this.calculateVolumeTrends(null, timeRange) || { trend: 'stable', percentage: 0, direction: 'neutral' },
+            performanceTrends: this.calculatePerformanceTrends?.(timeRange) || { trend: 'stable' },
+            processingTimeDistribution: this.calculateProcessingTimeDistribution?.() || {},
             throughputMetrics: {
-                documentsPerHour: this.calculateThroughput('hour'),
-                documentsPerDay: this.calculateThroughput('day'),
-                peakHours: this.identifyPeakHours()
+                documentsPerHour: this.calculateThroughput?.('hour') || 0,
+                documentsPerDay: this.calculateThroughput?.('day') || 0,
+                peakHours: this.identifyPeakHours?.() || []
             },
-            bottlenecks: this.identifyBottlenecks()
+            bottlenecks: this.identifyBottlenecks?.() || []
         };
     }
     
     /**
-     * Get usage analytics
+     * Get usage analytics with null safety
      * @param {string} timeRange - Time range for analysis
      * @returns {Object} Usage analytics
      */
     getUsageAnalytics(timeRange) {
-        const patterns = this.analyticsData.usagePatterns;
+        const patterns = this.analyticsData?.usagePatterns || {};
         
         return {
-            dailyUsage: Array.from(patterns.dailyUsage.entries()),
-            hourlyDistribution: patterns.hourlyDistribution,
-            weeklyDistribution: patterns.weeklyDistribution,
-            featureUsage: Array.from(patterns.featureUsage.entries())
-                .sort((a, b) => b[1] - a[1]),
-            sessionAnalytics: this.analyzeUserSessions(),
-            usageGrowth: this.calculateUsageGrowth(timeRange)
+            dailyUsage: patterns.dailyUsage ? Array.from(patterns.dailyUsage.entries()) : [],
+            hourlyDistribution: patterns.hourlyDistribution || {},
+            weeklyDistribution: patterns.weeklyDistribution || {},
+            featureUsage: patterns.featureUsage ? 
+                Array.from(patterns.featureUsage.entries()).sort((a, b) => b[1] - a[1]) : [],
+            sessionAnalytics: this.analyzeUserSessions?.() || {},
+            usageGrowth: this.calculateUsageGrowth?.(timeRange) || { growth: 0, trend: 'stable' }
         };
     }
     
     /**
-     * Get document analytics
+     * Get document analytics with null safety
      * @param {string} timeRange - Time range for analysis
      * @returns {Object} Document analytics
      */
     getDocumentAnalytics(timeRange) {
-        const docAnalytics = this.analyticsData.documentAnalytics;
+        const docAnalytics = this.analyticsData?.documentAnalytics || {};
         
         return {
-            typeDistribution: Array.from(docAnalytics.typeDistribution.entries()),
-            languageDistribution: Array.from(docAnalytics.languageDistribution.entries()),
-            sizeDistribution: docAnalytics.sizeDistribution,
-            confidenceDistribution: docAnalytics.confidenceDistribution,
-            qualityTrends: this.calculateQualityTrends(timeRange),
-            languageTrends: this.calculateLanguageTrends(timeRange)
+            typeDistribution: docAnalytics.typeDistribution ? 
+                Array.from(docAnalytics.typeDistribution.entries()) : [],
+            languageDistribution: docAnalytics.languageDistribution ? 
+                Array.from(docAnalytics.languageDistribution.entries()) : [],
+            sizeDistribution: docAnalytics.sizeDistribution || {},
+            confidenceDistribution: docAnalytics.confidenceDistribution || {},
+            qualityTrends: this.calculateQualityTrends?.(timeRange) || { trend: 'stable' },
+            languageTrends: this.calculateLanguageTrends?.(timeRange) || {}
         };
     }
     
     /**
-     * Get performance analytics
+     * Get performance analytics with null safety
      * @param {string} timeRange - Time range for analysis
      * @returns {Object} Performance analytics
      */
     getPerformanceAnalytics(timeRange) {
-        const perfMetrics = this.analyticsData.performanceMetrics;
+        const perfMetrics = this.analyticsData?.performanceMetrics || {};
         
         return {
-            systemLoad: this.getTimeSeriesData(perfMetrics.systemLoad, timeRange),
-            memoryUsage: this.getTimeSeriesData(perfMetrics.memoryUsage, timeRange),
-            errorRates: this.getTimeSeriesData(perfMetrics.errorRates, timeRange),
-            responseTimePercentiles: perfMetrics.responseTimePercentiles,
-            performanceAlerts: this.generatePerformanceAlerts(),
-            resourceUtilization: this.calculateResourceUtilization()
+            systemLoad: this.getTimeSeriesData?.(perfMetrics.systemLoad, timeRange) || [],
+            memoryUsage: this.getTimeSeriesData?.(perfMetrics.memoryUsage, timeRange) || [],
+            errorRates: this.getTimeSeriesData?.(perfMetrics.errorRates, timeRange) || [],
+            responseTimePercentiles: perfMetrics.responseTimePercentiles || {},
+            performanceAlerts: this.generatePerformanceAlerts?.() || [],
+            resourceUtilization: this.calculateResourceUtilization?.() || {}
         };
     }
     
@@ -714,6 +758,141 @@ class AnalyticsDashboard {
         });
     }
     
+    /**
+     * Calculate volume trends for analytics
+     * @param {Object} data - Analytics data
+     * @param {string} timeframe - Timeframe for trend analysis ('daily', 'weekly', 'monthly')
+     * @returns {Object} Volume trend analysis
+     */
+    calculateVolumeTrends(data = null, timeframe = 'daily') {
+        try {
+            const analyticsData = data || this.analyticsData;
+            const processingHistory = analyticsData.processingMetrics?.processingVolumeHistory || [];
+            
+            if (processingHistory.length === 0) {
+                return {
+                    trend: 'stable',
+                    percentage: 0,
+                    direction: 'neutral',
+                    dataPoints: [],
+                    confidence: 'low'
+                };
+            }
+            
+            // Group data by timeframe
+            const groupedData = this.groupDataByTimeframe(processingHistory, timeframe);
+            const dataPoints = Object.values(groupedData);
+            
+            if (dataPoints.length < 2) {
+                return {
+                    trend: 'insufficient_data',
+                    percentage: 0,
+                    direction: 'neutral',
+                    dataPoints: dataPoints,
+                    confidence: 'low'
+                };
+            }
+            
+            // Calculate trend
+            const firstPeriod = dataPoints[0];
+            const lastPeriod = dataPoints[dataPoints.length - 1];
+            const percentageChange = ((lastPeriod - firstPeriod) / firstPeriod) * 100;
+            
+            let trend = 'stable';
+            let direction = 'neutral';
+            
+            if (Math.abs(percentageChange) > 10) {
+                trend = percentageChange > 0 ? 'increasing' : 'decreasing';
+                direction = percentageChange > 0 ? 'up' : 'down';
+            }
+            
+            // Calculate confidence based on data consistency
+            const confidence = this.calculateTrendConfidence(dataPoints);
+            
+            return {
+                trend: trend,
+                percentage: Math.abs(percentageChange),
+                direction: direction,
+                dataPoints: dataPoints,
+                confidence: confidence,
+                timeframe: timeframe,
+                analysis: {
+                    firstPeriod: firstPeriod,
+                    lastPeriod: lastPeriod,
+                    totalPeriods: dataPoints.length,
+                    averageVolume: dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length
+                }
+            };
+        } catch (error) {
+            console.error('Error calculating volume trends:', error);
+            return {
+                trend: 'error',
+                percentage: 0,
+                direction: 'neutral',
+                dataPoints: [],
+                confidence: 'low',
+                error: error.message
+            };
+        }
+    }
+    
+    /**
+     * Group data by timeframe for trend analysis
+     * @param {Array} data - Raw data points
+     * @param {string} timeframe - Grouping timeframe
+     * @returns {Object} Grouped data
+     */
+    groupDataByTimeframe(data, timeframe) {
+        const grouped = {};
+        
+        data.forEach(point => {
+            const date = new Date(point.timestamp);
+            let key;
+            
+            switch (timeframe) {
+                case 'hourly':
+                    key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+                    break;
+                case 'weekly':
+                    const weekStart = new Date(date);
+                    weekStart.setDate(date.getDate() - date.getDay());
+                    key = `${weekStart.getFullYear()}-W${Math.ceil(weekStart.getDate() / 7)}`;
+                    break;
+                case 'monthly':
+                    key = `${date.getFullYear()}-${date.getMonth()}`;
+                    break;
+                case 'daily':
+                default:
+                    key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                    break;
+            }
+            
+            grouped[key] = (grouped[key] || 0) + (point.count || 1);
+        });
+        
+        return grouped;
+    }
+    
+    /**
+     * Calculate confidence level for trend analysis
+     * @param {Array} dataPoints - Data points for analysis
+     * @returns {string} Confidence level
+     */
+    calculateTrendConfidence(dataPoints) {
+        if (dataPoints.length < 3) return 'low';
+        if (dataPoints.length < 7) return 'medium';
+        
+        // Calculate variance to determine consistency
+        const mean = dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length;
+        const variance = dataPoints.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / dataPoints.length;
+        const standardDeviation = Math.sqrt(variance);
+        const coefficientOfVariation = standardDeviation / mean;
+        
+        if (coefficientOfVariation < 0.2) return 'high';
+        if (coefficientOfVariation < 0.5) return 'medium';
+        return 'low';
+    }
+
     /**
      * Get current statistics
      * @returns {Object} Current statistics

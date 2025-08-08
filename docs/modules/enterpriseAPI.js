@@ -193,6 +193,135 @@ class EnterpriseAPI {
     }
     
     /**
+     * Set up webhook endpoints for integrations
+     * @returns {Promise<void>}
+     */
+    async setupWebhooks() {
+        try {
+            console.log('Setting up webhook endpoints...');
+            
+            // Initialize webhook handlers for each enabled integration
+            for (const [name, integration] of Object.entries(this.integrations)) {
+                if (integration.enabled && integration.webhookUrl) {
+                    try {
+                        // Register webhook endpoint
+                        this.webhookHandlers[name] = {
+                            url: integration.webhookUrl,
+                            secret: integration.webhookSecret || '',
+                            events: integration.supportedEvents || [],
+                            handler: this.createWebhookHandler(name)
+                        };
+                        
+                        console.log(`Webhook registered for ${name}`);
+                    } catch (error) {
+                        console.warn(`Failed to setup webhook for ${name}:`, error);
+                    }
+                }
+            }
+            
+            console.log('Webhook endpoints setup completed');
+        } catch (error) {
+            console.error('Error setting up webhooks:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Create webhook handler for integration
+     * @param {string} integrationName - Name of integration
+     * @returns {Function} Webhook handler function
+     */
+    createWebhookHandler(integrationName) {
+        return async (req, res) => {
+            try {
+                const integration = this.integrations[integrationName];
+                if (!integration || !integration.enabled) {
+                    return res.status(404).json({ error: 'Integration not found or disabled' });
+                }
+                
+                // Verify webhook signature if secret is provided
+                if (integration.webhookSecret) {
+                    const signature = req.headers['x-webhook-signature'] || req.headers['x-hub-signature'];
+                    if (!this.verifyWebhookSignature(req.body, signature, integration.webhookSecret)) {
+                        return res.status(401).json({ error: 'Invalid webhook signature' });
+                    }
+                }
+                
+                // Process webhook event
+                const eventType = req.headers['x-event-type'] || req.body.type;
+                const eventData = req.body;
+                
+                await this.processWebhookEvent(integrationName, eventType, eventData);
+                
+                res.status(200).json({ success: true, message: 'Webhook processed successfully' });
+            } catch (error) {
+                console.error(`Webhook handler error for ${integrationName}:`, error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        };
+    }
+    
+    /**
+     * Verify webhook signature
+     * @param {Object} payload - Webhook payload
+     * @param {string} signature - Webhook signature
+     * @param {string} secret - Webhook secret
+     * @returns {boolean} Verification result
+     */
+    verifyWebhookSignature(payload, signature, secret) {
+        try {
+            const crypto = require('crypto');
+            const expectedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(JSON.stringify(payload))
+                .digest('hex');
+            
+            return signature === `sha256=${expectedSignature}` || signature === expectedSignature;
+        } catch (error) {
+            console.error('Error verifying webhook signature:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Process webhook event
+     * @param {string} integrationName - Name of integration
+     * @param {string} eventType - Type of event
+     * @param {Object} eventData - Event data
+     * @returns {Promise<void>}
+     */
+    async processWebhookEvent(integrationName, eventType, eventData) {
+        try {
+            console.log(`Processing webhook event: ${integrationName}.${eventType}`);
+            
+            // Handle different event types based on integration
+            switch (integrationName) {
+                case 'salesforce':
+                    await this.handleSalesforceWebhook(eventType, eventData);
+                    break;
+                case 'hubspot':
+                    await this.handleHubSpotWebhook(eventType, eventData);
+                    break;
+                case 'googleDrive':
+                    await this.handleGoogleDriveWebhook(eventType, eventData);
+                    break;
+                case 'dropbox':
+                    await this.handleDropboxWebhook(eventType, eventData);
+                    break;
+                default:
+                    console.log(`No specific handler for ${integrationName} webhook`);
+            }
+            
+            // Track webhook event
+            this.trackRequest(integrationName, 'webhook', 0, true);
+        } catch (error) {
+            console.error(`Error processing webhook event for ${integrationName}:`, error);
+            this.trackRequest(integrationName, 'webhook', 0, false);
+            throw error;
+        }
+    }
+
+    /**
      * Initialize the Enterprise API
      * @returns {Promise<boolean>} Success status
      */

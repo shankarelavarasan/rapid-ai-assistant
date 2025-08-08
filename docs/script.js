@@ -518,14 +518,23 @@ function updateAnalyticsDisplay() {
   if (analyticsDashboard) {
     const report = analyticsDashboard.generateReport();
     
-    // Update processing stats
+    // Update processing stats with null checks
     const totalFilesEl = document.getElementById('totalProcessedFiles');
     const avgTimeEl = document.getElementById('avgProcessingTime');
     const successRateEl = document.getElementById('successRate');
     
-    if (totalFilesEl) {totalFilesEl.textContent = report.processing.totalFiles;}
-    if (avgTimeEl) {avgTimeEl.textContent = `${report.processing.averageTime}ms`;}
-    if (successRateEl) {successRateEl.textContent = `${report.processing.successRate}%`;}
+    // Use optional chaining and provide fallback values
+    if (totalFilesEl) {
+      totalFilesEl.textContent = report?.processing?.totalFiles ?? 0;
+    }
+    if (avgTimeEl) {
+      const avgTime = report?.processing?.averageTime ?? 0;
+      avgTimeEl.textContent = `${avgTime}ms`;
+    }
+    if (successRateEl) {
+      const successRate = report?.processing?.successRate ?? 0;
+      successRateEl.textContent = `${successRate}%`;
+    }
   }
 }
 
