@@ -302,6 +302,139 @@ class AnalyticsDashboard {
     }
     
     /**
+     * Generate and export analytics report
+     * @param {Object} options - Report generation options
+     * @returns {Promise<Object>} Generated report data
+     */
+    async generateReport(options = {}) {
+        try {
+            const format = options.format || 'json';
+            const timeRange = options.timeRange || 'last7days';
+            
+            console.log(`Generating analytics report in ${format} format...`);
+            
+            // Get comprehensive analytics data
+            const reportData = this.getAnalyticsReport({ timeRange, includeRealTime: true });
+            
+            // Add report metadata
+            const report = {
+                metadata: {
+                    generatedAt: new Date().toISOString(),
+                    format: format,
+                    timeRange: timeRange,
+                    version: '1.0.0'
+                },
+                data: reportData
+            };
+            
+            // Export based on format
+            switch (format.toLowerCase()) {
+                case 'pdf':
+                    return await this.exportToPDF(report);
+                case 'csv':
+                    return await this.exportToCSV(report);
+                case 'excel':
+                    return await this.exportToExcel(report);
+                case 'json':
+                default:
+                    return report;
+            }
+        } catch (error) {
+            console.error('Error generating report:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Export report to PDF format
+     * @param {Object} reportData - Report data to export
+     * @returns {Promise<Object>} PDF export result
+     */
+    async exportToPDF(reportData) {
+        try {
+            // Create a simple PDF structure without jsPDF for now
+            const pdfData = {
+                type: 'pdf',
+                content: this.formatReportForPDF(reportData),
+                filename: `analytics-report-${Date.now()}.pdf`,
+                success: true
+            };
+            
+            console.log('PDF report generated successfully');
+            return pdfData;
+        } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * Export report to CSV format
+     * @param {Object} reportData - Report data to export
+     * @returns {Promise<Object>} CSV export result
+     */
+    async exportToCSV(reportData) {
+        try {
+            const csvContent = this.formatReportForCSV(reportData);
+            const csvData = {
+                type: 'csv',
+                content: csvContent,
+                filename: `analytics-report-${Date.now()}.csv`,
+                success: true
+            };
+            
+            console.log('CSV report generated successfully');
+            return csvData;
+        } catch (error) {
+            console.error('Error exporting to CSV:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * Format report data for PDF export
+     * @param {Object} reportData - Report data
+     * @returns {string} Formatted PDF content
+     */
+    formatReportForPDF(reportData) {
+        const { metadata, data } = reportData;
+        
+        let content = `Analytics Report\n`;
+        content += `Generated: ${metadata.generatedAt}\n`;
+        content += `Time Range: ${metadata.timeRange}\n\n`;
+        
+        // Summary section
+        if (data.summary) {
+            content += `SUMMARY\n`;
+            content += `Total Processed: ${data.summary.totalProcessed}\n`;
+            content += `Success Rate: ${data.summary.successRate.toFixed(2)}%\n`;
+            content += `Average Processing Time: ${data.summary.averageProcessingTime}ms\n\n`;
+        }
+        
+        return content;
+    }
+    
+    /**
+     * Format report data for CSV export
+     * @param {Object} reportData - Report data
+     * @returns {string} CSV formatted content
+     */
+    formatReportForCSV(reportData) {
+        const { data } = reportData;
+        
+        let csv = 'Metric,Value\n';
+        
+        if (data.summary) {
+            csv += `Total Processed,${data.summary.totalProcessed}\n`;
+            csv += `Success Rate,${data.summary.successRate.toFixed(2)}%\n`;
+            csv += `Average Processing Time,${data.summary.averageProcessingTime}ms\n`;
+            csv += `Total Errors,${data.summary.totalErrors}\n`;
+        }
+        
+        return csv;
+    }
+    
+    /**
      * Get comprehensive analytics report
      * @param {Object} options - Report options
      * @returns {Object} Analytics report

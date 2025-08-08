@@ -52,6 +52,7 @@ class CollaborationTools {
         this.websocket = null;
         this.eventHandlers = new Map();
         this.messageQueue = [];
+        this.reconnectAttempts = this.config.reconnectAttempts;
         
         // Activity tracking
         this.activityLog = [];
@@ -548,6 +549,341 @@ class CollaborationTools {
             }
         });
     }
+    
+    /**
+     * Handle WebSocket reconnection
+     */
+    handleWebSocketReconnect() {
+        if (this.reconnectAttempts > 0) {
+            this.reconnectAttempts--;
+            console.log(`Attempting to reconnect WebSocket... (${this.config.reconnectAttempts - this.reconnectAttempts}/${this.config.reconnectAttempts})`);
+            
+            setTimeout(() => {
+                this.initializeWebSocket().catch(error => {
+                    console.error('WebSocket reconnection failed:', error);
+                    if (this.reconnectAttempts === 0) {
+                        console.error('Max reconnection attempts reached');
+                    }
+                });
+            }, 5000); // Wait 5 seconds before reconnecting
+        }
+    }
+    
+    /**
+     * Handle incoming WebSocket messages
+     * @param {Object} message - WebSocket message
+     */
+    handleWebSocketMessage(message) {
+        switch (message.type) {
+            case 'user_online':
+                this.onlineUsers.add(message.user.id);
+                break;
+            case 'user_offline':
+                this.onlineUsers.delete(message.user.id);
+                break;
+            case 'file_shared':
+            case 'comment_added':
+            case 'file_updated':
+            case 'workspace_created':
+            case 'user_joined':
+                this.handleRealTimeEvent(message);
+                break;
+            default:
+                console.log('Unknown message type:', message.type);
+        }
+    }
+    
+    /**
+     * Handle real-time events
+     * @param {Object} event - Real-time event
+     */
+    handleRealTimeEvent(event) {
+        const handlers = this.eventHandlers.get(event.type) || [];
+        handlers.forEach(handler => {
+            try {
+                handler(event);
+            } catch (error) {
+                console.error('Error handling real-time event:', error);
+            }
+        });
+    }
+    
+    /**
+     * Send message via WebSocket
+     * @param {Object} message - Message to send
+     */
+    sendMessage(message) {
+        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            this.websocket.send(JSON.stringify(message));
+        } else {
+            this.messageQueue.push(message);
+        }
+    }
+    
+    /**
+     * Broadcast event to workspace members
+     * @param {string} workspaceId - Workspace ID
+     * @param {string} eventType - Event type
+     * @param {Object} data - Event data
+     */
+    broadcastToWorkspace(workspaceId, eventType, data) {
+        this.sendMessage({
+            type: 'broadcast_to_workspace',
+            workspaceId: workspaceId,
+            eventType: eventType,
+            data: data
+        });
+    }
+    
+    /**
+     * Broadcast event to file collaborators
+     * @param {string} fileId - File ID
+     * @param {string} eventType - Event type
+     * @param {Object} data - Event data
+     */
+    broadcastToFileCollaborators(fileId, eventType, data) {
+        this.sendMessage({
+            type: 'broadcast_to_file_collaborators',
+            fileId: fileId,
+            eventType: eventType,
+            data: data
+        });
+    }
+    
+    /**
+     * Broadcast event to all connected users
+     * @param {string} eventType - Event type
+     * @param {Object} data - Event data
+     */
+    broadcastEvent(eventType, data) {
+        this.sendMessage({
+            type: 'broadcast_event',
+            eventType: eventType,
+            data: data
+        });
+    }
+    
+    /**
+     * Notify specific users
+     * @param {Array} userIds - User IDs to notify
+     * @param {string} eventType - Event type
+     * @param {Object} data - Event data
+     */
+    notifyUsers(userIds, eventType, data) {
+        this.sendMessage({
+            type: 'notify_users',
+            userIds: userIds,
+            eventType: eventType,
+            data: data
+        });
+    }
+    
+    /**
+     * Initialize event handlers
+     */
+    initializeEventHandlers() {
+        // Set up default event handlers
+        this.eventHandlers.set('file_shared', [(event) => {
+            console.log('File shared:', event.data.file.fileName);
+        }]);
+        
+        this.eventHandlers.set('comment_added', [(event) => {
+            console.log('Comment added to file:', event.data.comment.content);
+        }]);
+        
+        this.eventHandlers.set('user_joined', [(event) => {
+            console.log('User joined workspace:', event.data.user.name);
+        }]);
+    }
+    
+    /**
+     * Load workspaces from storage
+     * @returns {Promise<void>}
+     */
+    async loadWorkspaces() {
+        // In a real implementation, this would load from a database or API
+        // For now, we'll just initialize with empty data
+        console.log('Loading workspaces...');
+    }
+    
+    /**
+     * Load shared files from storage
+     * @returns {Promise<void>}
+     */
+    async loadSharedFiles() {
+        // In a real implementation, this would load from a database or API
+        // For now, we'll just initialize with empty data
+        console.log('Loading shared files...');
+    }
+    
+    /**
+     * Set file permissions
+     * @param {string} fileId - File ID
+     * @param {Object} permissions - Permissions object
+     */
+    setFilePermissions(fileId, permissions) {
+        this.filePermissions.set(fileId, permissions);
+    }
+    
+    /**
+     * Check if user has file permission
+     * @param {string} fileId - File ID
+     * @param {string} permission - Permission to check
+     * @returns {boolean} Has permission
+     */
+    hasFilePermission(fileId, permission) {
+        const file = this.sharedFiles.get(fileId);
+        if (!file) return false;
+        
+        // Owner has all permissions
+        if (file.owner === this.currentUser.id) return true;
+        
+        // Check specific permissions
+        const permissions = this.filePermissions.get(fileId);
+        return permissions && permissions[permission];
+    }
+    
+    /**
+     * Check if user has access to file
+     * @param {string} fileId - File ID
+     * @returns {boolean} Has access
+     */
+    hasFileAccess(fileId) {
+        const file = this.sharedFiles.get(fileId);
+        if (!file) return false;
+        
+        // Owner has access
+        if (file.owner === this.currentUser.id) return true;
+        
+        // Check if shared with user
+        if (file.sharedWith.includes(this.currentUser.id)) return true;
+        
+        // Check workspace access
+        if (file.workspaceId) {
+            const workspace = this.workspaces.get(file.workspaceId);
+            return workspace && workspace.members.includes(this.currentUser.id);
+        }
+        
+        // Check if public
+        return file.settings.isPublic;
+    }
+    
+    /**
+     * Get file collaborators
+     * @param {string} fileId - File ID
+     * @returns {Array} Collaborators
+     */
+    getFileCollaborators(fileId) {
+        const file = this.sharedFiles.get(fileId);
+        if (!file) return [];
+        
+        const collaborators = [];
+        
+        // Add owner
+        const owner = this.users.get(file.owner);
+        if (owner) collaborators.push(owner);
+        
+        // Add shared users
+        file.sharedWith.forEach(userId => {
+            const user = this.users.get(userId);
+            if (user && !collaborators.find(c => c.id === userId)) {
+                collaborators.push(user);
+            }
+        });
+        
+        // Add workspace members
+        if (file.workspaceId) {
+            const workspace = this.workspaces.get(file.workspaceId);
+            if (workspace) {
+                workspace.members.forEach(userId => {
+                    const user = this.users.get(userId);
+                    if (user && !collaborators.find(c => c.id === userId)) {
+                        collaborators.push(user);
+                    }
+                });
+            }
+        }
+        
+        return collaborators;
+    }
+    
+    /**
+     * Get last file activity
+     * @param {string} fileId - File ID
+     * @returns {Object|null} Last activity
+     */
+    getLastFileActivity(fileId) {
+        return this.activityLog
+            .filter(activity => activity.fileId === fileId)
+            .sort((a, b) => b.timestamp - a.timestamp)[0] || null;
+    }
+    
+    /**
+     * Check if file is being edited
+     * @param {string} fileId - File ID
+     * @returns {boolean} Is being edited
+     */
+    isFileBeingEdited(fileId) {
+        // In a real implementation, this would track active editing sessions
+        // For now, we'll just return false
+        return false;
+    }
+    
+    /**
+     * Generate share URL
+     * @param {string} shareId - Share ID
+     * @returns {string} Share URL
+     */
+    generateShareUrl(shareId) {
+        return `${window.location.origin}/share/${shareId}`;
+    }
+    
+    /**
+     * Calculate search relevance
+     * @param {Object} item - Item to calculate relevance for
+     * @param {string} query - Search query
+     * @returns {number} Relevance score
+     */
+    calculateSearchRelevance(item, query) {
+        const queryLower = query.toLowerCase();
+        let score = 0;
+        
+        // Check different fields based on item type
+        if (item.fileName) {
+            if (item.fileName.toLowerCase().includes(queryLower)) score += 10;
+        }
+        if (item.name) {
+            if (item.name.toLowerCase().includes(queryLower)) score += 10;
+        }
+        if (item.content) {
+            if (item.content.toLowerCase().includes(queryLower)) score += 5;
+        }
+        if (item.description) {
+            if (item.description.toLowerCase().includes(queryLower)) score += 3;
+        }
+        
+        return score;
+    }
+    
+    /**
+     * Format time ago
+     * @param {number} timestamp - Timestamp
+     * @returns {string} Formatted time
+     */
+    formatTimeAgo(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+        
+        if (minutes < 1) return 'just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        return `${days}d ago`;
+    }
+    
+
     
     /**
      * Generate unique ID

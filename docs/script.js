@@ -875,10 +875,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function exportAsPdf(content) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text(content, 10, 10);
-    doc.save('output.pdf');
+    try {
+      // Check if jsPDF is available
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        console.error('jsPDF library not loaded');
+        toastManager.error('PDF export library not available');
+        return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Split content into lines to handle long text
+      const lines = doc.splitTextToSize(content, 180);
+      doc.text(lines, 10, 10);
+      doc.save('output.pdf');
+      
+      toastManager.success('PDF exported successfully!');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toastManager.error('Failed to export PDF: ' + error.message);
+    }
   }
 
   function exportAsDocx(content) {

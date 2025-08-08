@@ -160,6 +160,39 @@ class EnterpriseAPI {
     }
     
     /**
+     * Initialize integrations
+     * @returns {Promise<void>}
+     */
+    async initializeIntegrations() {
+        try {
+            console.log('Initializing enterprise integrations...');
+            
+            // Initialize each enabled integration
+            for (const [name, integration] of Object.entries(this.integrations)) {
+                if (integration.enabled) {
+                    try {
+                        console.log(`Initializing ${name} integration...`);
+                        // Test connection for enabled integrations
+                        const testResult = await this.testIntegration(name);
+                        if (!testResult.success) {
+                            console.warn(`Integration ${name} test failed:`, testResult.error);
+                            integration.enabled = false;
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to initialize ${name} integration:`, error);
+                        integration.enabled = false;
+                    }
+                }
+            }
+            
+            console.log('Enterprise integrations initialized');
+        } catch (error) {
+            console.error('Error initializing integrations:', error);
+            throw error;
+        }
+    }
+    
+    /**
      * Initialize the Enterprise API
      * @returns {Promise<boolean>} Success status
      */
