@@ -1,7 +1,7 @@
 # TODO:
 
-- [x] analyze-current-layout: Examine current CSS styles in style.css to identify excessive spacing and oversized containers (priority: High)
-- [x] optimize-desktop-layout: Reduce container sizes, margins, and padding for desktop view to make layout more compact (priority: High)
-- [x] optimize-mobile-layout: Adjust mobile responsive styles to ensure proper scaling and compact design on mobile devices (priority: High)
-- [x] test-responsive-design: Test the optimized layout on both desktop and mobile to ensure proper functionality (priority: Medium)
-- [ ] push-layout-fixes: Push the optimized layout changes to GitHub (**IN PROGRESS**) (priority: Medium)
+- [x] fix-api-endpoint: Fix API endpoint configuration - change from localhost:3000 to correct port (9999) for ask-gemini endpoint (priority: High)
+- [x] fix-file-selection: Address 'Please select files first' issue in the application (priority: High)
+- [x] test-fixes: Test the API fixes to ensure fetch errors are resolved (priority: Medium)
+- [ ] commit-changes: Commit all changes with descriptive message (**IN PROGRESS**) (priority: Medium)
+- [ ] push-to-github: Push all committed changes to GitHub repository (priority: Medium)

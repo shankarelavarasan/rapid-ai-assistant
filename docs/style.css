@@ -30,15 +30,15 @@
   --error: #ef4444;
   --info: #3b82f6;
   
-  /* Spacing (6px grid system - more compact) */
-  --space-1: 6px;
-  --space-2: 12px;
-  --space-3: 18px;
-  --space-4: 24px;
-  --space-5: 30px;
-  --space-6: 36px;
-  --space-8: 48px;
-  --space-10: 60px;
+  /* Spacing (4px grid system - ultra compact) */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
   
   /* Border Radius */
   --radius-sm: 4px;
@@ -54,13 +54,13 @@
   
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-base: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 24px;
-  --font-size-3xl: 30px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
   
   /* Line Heights */
   --leading-tight: 1.25;
@@ -75,7 +75,7 @@
 
 body {
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: 12px;
   line-height: var(--leading-normal);
   color: var(--gray-900);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -616,7 +616,7 @@ body {
   display: none;
   background-color: var(--white);
   border-bottom: 1px solid var(--gray-200);
-  padding: var(--space-2);
+  padding: 1px;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
@@ -650,7 +650,7 @@ body {
 
 .mobile-header .mobile-mode {
   display: flex;
-  gap: var(--space-1);
+  gap: 1px;
 }
 
 /* Desktop Mode Selection */
@@ -676,7 +676,7 @@ body {
   background-color: var(--white);
   color: var(--gray-700);
   font-weight: 500;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   min-width: 120px;
@@ -706,7 +706,7 @@ body {
 
 /* Left Panel */
 .left-panel {
-  width: 240px;
+  width: 140px;
   background-color: var(--white);
   border-right: 1px solid var(--gray-200);
   display: flex;
@@ -716,7 +716,7 @@ body {
 }
 
 .panel-section {
-  padding: var(--space-2);
+  padding: var(--space-1);
   border-bottom: 1px solid var(--gray-100);
 }
 
@@ -725,8 +725,8 @@ body {
 }
 
 .panel-section h3 {
-  margin: 0 0 var(--space-2) 0;
-  font-size: var(--font-size-lg);
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--gray-900);
 }
@@ -745,7 +745,7 @@ body {
 .chat-container {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-2);
+  padding: var(--space-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -755,7 +755,7 @@ body {
 .prompt-container {
   background-color: var(--white);
   border-top: 1px solid var(--gray-200);
-  padding: var(--space-2);
+  padding: var(--space-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -764,7 +764,7 @@ body {
 
 .button-group {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
   justify-content: flex-end;
   flex-wrap: wrap;
 }
@@ -772,12 +772,12 @@ body {
 /* Form Elements */
 #promptTextarea {
   width: 100%;
-  min-height: 60px;
+  min-height: 40px;
   padding: var(--space-1);
   border: 1px solid var(--gray-300);
   border-radius: var(--radius);
   font-family: var(--font-family);
-  font-size: var(--font-size-sm);
+  font-size: 10px;
   line-height: var(--leading-normal);
   resize: vertical;
   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -835,7 +835,7 @@ label {
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--gray-700);
-  margin-bottom: var(--space-1);
+  margin-bottom: 1px;
 }
 
 /* Form Validation */
@@ -867,11 +867,11 @@ select.success {
 
 /* Button Styles */
 button {
-  padding: var(--space-1) var(--space-2);
+  padding: 1px 3px;
   border: none;
   border-radius: var(--radius);
   font-family: var(--font-family);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -879,7 +879,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  min-height: 36px; /* More compact but still touch-friendly */
+  min-height: 24px; /* Ultra compact */
 }
 
 /* Primary Button */
@@ -1006,7 +1006,7 @@ button {
 
 .btn-lg {
   padding: var(--space-3) var(--space-4);
-  font-size: var(--font-size-lg);
+  font-size: 13px;
   min-height: 52px;
 }
 
@@ -1346,7 +1346,7 @@ button {
 .template-card h4 {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  margin: var(--space-1) 0;
+  margin: 1px 0;
   color: var(--gray-900);
 }
 
@@ -1555,9 +1555,10 @@ button {
   
   .left-panel {
     width: 100%;
-    max-height: 150px;
+    max-height: 120px;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
+    padding: var(--space-1);
   }
   
   .mode-selection {
@@ -1574,6 +1575,8 @@ button {
   
   .button-group {
     justify-content: stretch;
+    gap: 1px;
+    flex-wrap: wrap;
   }
   
   .button-group button {
@@ -1605,11 +1608,11 @@ button {
   }
   
   .prompt-container {
-    padding: var(--space-1);
+    padding: 1px;
   }
   
   .chat-container {
-    padding: var(--space-1);
+    padding: 1px;
   }
   
   .panel-section {
@@ -1617,7 +1620,7 @@ button {
   }
   
   .left-panel {
-    max-height: 120px;
+    max-height: 100px;
   }
   
   button {

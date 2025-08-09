@@ -1,8 +1,8 @@
 // API Configuration for Rapid AI Assistant
 export const API_CONFIG = {
   development: {
-    baseUrl: 'http://localhost:3000',
-    wsUrl: 'ws://localhost:3000',
+    baseUrl: 'http://localhost:9999',
+    wsUrl: 'ws://localhost:9999',
   },
   production: {
     baseUrl: 'https://rapid-ai-assistant.onrender.com',

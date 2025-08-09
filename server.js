@@ -26,6 +26,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 // Get port from environment variable or default to 3001
 const PORT = process.env.PORT || 3001;
+console.log('Starting server on port:', PORT);
 
 // Create HTTP server and Socket.IO instance for real-time progress updates
 const httpServer = createServer(app);

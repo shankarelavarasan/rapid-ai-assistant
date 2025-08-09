@@ -27,8 +27,8 @@ import { EnterpriseAPI } from './modules/enterpriseAPI.js';
 // API Configuration
 const API_CONFIG = {
   development: {
-    baseUrl: 'http://localhost:3000',
-    wsUrl: 'ws://localhost:3000',
+    baseUrl: 'http://localhost:9999',
+    wsUrl: 'ws://localhost:9999',
   },
   production: {
     baseUrl: 'https://rapid-ai-assistant.onrender.com',
@@ -250,6 +250,11 @@ function setupFolderSelection() {
           
           // Store files in state manager for processing
           stateManager.state.selectedFiles = files;
+          
+          // Update integratedProcessor with selected files
+          if (processor && processor.handleFileSelection) {
+            processor.handleFileSelection(files);
+          }
         }
       } catch (error) {
         console.error('Error handling folder selection:', error);
@@ -284,6 +289,11 @@ function setupFolderSelection() {
           processBtn.textContent = 'Process';
           processBtn.dataset.mode = '';
           processBtn.classList.remove('enhanced-processing-btn');
+        }
+        
+        // Update integratedProcessor with selected files
+        if (processor && processor.handleFileSelection) {
+          processor.handleFileSelection(files);
         }
       }
     });
