@@ -353,8 +353,8 @@ class AnalyticsDashboard {
     async exportToPDF(reportData) {
         try {
             // Check if jsPDF is available
-            if (typeof window !== 'undefined' && window.jsPDF) {
-                const { jsPDF } = window;
+            if (typeof window !== 'undefined' && window.jspdf && window.jspdf.jsPDF) {
+                const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
                 // Add report title

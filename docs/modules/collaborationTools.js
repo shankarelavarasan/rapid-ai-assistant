@@ -25,7 +25,7 @@ class CollaborationTools {
             allowedFileTypes: options.allowedFileTypes || ['pdf', 'doc', 'docx', 'txt', 'jpg', 'png'],
             
             // Real-time settings
-            websocketUrl: options.websocketUrl || 'ws://localhost:8080/ws',
+            websocketUrl: options.websocketUrl || 'ws://localhost:8081/ws',
             heartbeatInterval: options.heartbeatInterval || 30000,
             reconnectAttempts: options.reconnectAttempts || 5
         };
