@@ -8,25 +8,16 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <!-- Mobile Header -->
-    <header class="mobile-header">
-        <button class="hamburger-menu" id="hamburgerMenu" aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <h1 class="app-title">Rapid AI Assistant</h1>
-        <div class="mode-selection mobile-mode">
-            <button id="workBtn" name="workBtn" class="mode-btn">Work</button>
-            <button id="chatBtn" name="chatBtn" class="mode-btn">Chat</button>
+    <!-- Main Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <h1 class="app-title">Rapid AI</h1>
+            <div class="header-search">
+                <input type="text" placeholder="http://localhost:9999/" readonly>
+                <button class="notification-btn">🔔</button>
+            </div>
         </div>
     </header>
-    
-    <!-- Desktop Mode Selection -->
-    <div class="mode-selection desktop-mode">
-        <button id="workBtnDesktop" name="workBtnDesktop" class="mode-btn">Work</button>
-        <button id="chatBtnDesktop" name="chatBtnDesktop" class="mode-btn">Chat</button>
-    </div>
     
     <div class="container">
         <div class="left-panel" id="leftPanel">

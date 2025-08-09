@@ -4,7 +4,7 @@
 /* CSS Variables for Premium Design System */
 :root {
   /* Premium Color Palette */
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-gradient: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
@@ -16,9 +16,15 @@
   --neon-purple: #b794f6;
   --neon-green: #68d391;
   --neon-pink: #f687b3;
-  --cyber-dark: #0a0e27;
-  --cyber-medium: #1a1f3a;
-  --cyber-light: #2d3748;
+  --cyber-dark: #1a1a1a;
+  --cyber-medium: #2a2a2a;
+  --cyber-light: #3a3a3a;
+  
+  /* Golden Theme Colors */
+  --golden-primary: #d4af37;
+  --golden-secondary: #ffd700;
+  --golden-accent: #ffed4e;
+  --golden-dark: #b8941f;
   
   /* Glass Morphism Colors */
   --glass-white: rgba(255, 255, 255, 0.25);
@@ -111,8 +117,8 @@ body {
   font-family: var(--font-family);
   font-size: 12px;
   line-height: var(--leading-normal);
-  color: var(--gray-900);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  color: #ffffff;
+  background: var(--cyber-dark);
   background-attachment: fixed;
   margin: 0;
   padding: 0;
@@ -592,12 +598,19 @@ body::before {
 
 /* Enhanced Buttons */
 .btn {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--golden-primary) 0%, var(--golden-secondary) 100%);
+  border: 1px solid var(--golden-dark);
+  color: #000;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn::before {
@@ -616,8 +629,10 @@ body::before {
 }
 
 .btn:hover {
+  background: linear-gradient(135deg, var(--golden-secondary) 0%, var(--golden-accent) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  border-color: var(--golden-secondary);
 }
 
 /* Template Cards Enhancement */
@@ -680,16 +695,58 @@ body::before {
   }
 }
 
-/* Mobile Header */
-.mobile-header {
-  display: none;
-  background-color: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  padding: 1px;
-  box-shadow: var(--shadow-sm);
+/* Main Header */
+.main-header {
+  background: var(--cyber-dark);
+  border-bottom: 1px solid #333;
+  padding: 15px 20px;
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--golden-secondary);
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-search input {
+  background: var(--cyber-medium);
+  border: 1px solid #444;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14px;
+  width: 300px;
+}
+
+.notification-btn {
+  background: var(--cyber-medium);
+  border: 1px solid #444;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .mobile-header .app-title {
@@ -775,16 +832,15 @@ body::before {
 
 /* Premium Left Panel */
 .left-panel {
-  width: 140px;
-  background: var(--glass-dark);
-  border-right: 1px solid var(--glass-border);
-  padding: var(--space-3);
+  width: 280px;
+  background: var(--cyber-medium);
+  border-right: 1px solid #333;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 20px;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: var(--backdrop-blur);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   position: relative;
 }
 
@@ -800,8 +856,8 @@ body::before {
 }
 
 .panel-section {
-  padding: var(--space-1);
-  border-bottom: 1px solid var(--gray-100);
+  padding: 15px 0;
+  border-bottom: 1px solid #333;
 }
 
 .panel-section:last-child {
@@ -809,10 +865,12 @@ body::before {
 }
 
 .panel-section h3 {
-  margin: 0 0 var(--space-1) 0;
-  font-size: var(--font-size-sm);
+  margin: 0 0 15px 0;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--golden-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Premium Right Panel */
@@ -822,8 +880,7 @@ body::before {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--glass-dark);
-  backdrop-filter: var(--backdrop-blur-sm);
+  background: var(--cyber-dark);
   position: relative;
 }
 
@@ -1535,34 +1592,36 @@ button:hover::before {
 /* Navigation Tabs */
 .nav-tabs {
   display: flex;
-  border-bottom: 1px solid var(--gray-200);
-  margin-bottom: var(--space-3);
-  background-color: var(--gray-50);
-  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: 1px solid #333;
+  margin-bottom: 20px;
+  background-color: transparent;
+  gap: 10px;
 }
 
 .nav-tab {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  background: none;
-  color: var(--gray-600);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  padding: 8px 16px;
+  border: 1px solid var(--golden-dark);
+  background: linear-gradient(135deg, var(--golden-primary) 0%, var(--golden-secondary) 100%);
+  color: #000;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  border-bottom: 2px solid transparent;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .nav-tab:hover {
-  color: var(--primary-blue);
-  background-color: var(--white);
+  background: linear-gradient(135deg, var(--golden-secondary) 0%, var(--golden-accent) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 .nav-tab.active {
-  color: var(--primary-blue);
-  background-color: var(--white);
-  border-bottom-color: var(--primary-blue);
+  background: linear-gradient(135deg, var(--golden-secondary) 0%, var(--golden-accent) 100%);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Tab Content */
