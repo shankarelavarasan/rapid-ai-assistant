@@ -112,42 +112,83 @@ async function initializePhase1Modules() {
 // Initialize Phase 3 Advanced Modules Function
 async function initializePhase3Modules() {
   try {
-    // Initialize analytics dashboard
-    analyticsDashboard = new AnalyticsDashboard({
-      enableRealTimeUpdates: true,
-      dataRetentionDays: 30,
-      enableExport: true
-    });
-    await analyticsDashboard.initialize();
+    // Initialize analytics dashboard with error handling
+    try {
+      if (typeof AnalyticsDashboard !== 'undefined') {
+        analyticsDashboard = new AnalyticsDashboard({
+          enableRealTimeUpdates: true,
+          dataRetentionDays: 30,
+          enableExport: true
+        });
+        await analyticsDashboard.initialize();
+        console.log('AnalyticsDashboard initialized successfully');
+      } else {
+        console.warn('AnalyticsDashboard class not available, skipping initialization');
+      }
+    } catch (error) {
+      console.error('Error initializing AnalyticsDashboard:', error);
+    }
     
-    // Initialize file organizer
-    fileOrganizer = new FileOrganizer({
-      enableAutoOrganization: false,
-      defaultStrategy: 'smart',
-      enableSmartRenaming: true
-    });
-    await fileOrganizer.initialize();
+    // Initialize file organizer with error handling
+    try {
+      if (typeof FileOrganizer !== 'undefined') {
+        fileOrganizer = new FileOrganizer({
+          enableAutoOrganization: false,
+          defaultStrategy: 'smart',
+          enableSmartRenaming: true
+        });
+        await fileOrganizer.initialize();
+        console.log('FileOrganizer initialized successfully');
+      } else {
+        console.warn('FileOrganizer class not available, skipping initialization');
+      }
+    } catch (error) {
+      console.error('Error initializing FileOrganizer:', error);
+    }
     
-    // Initialize collaboration tools
-    collaborationTools = new CollaborationTools({
-      enableRealTimeUpdates: true,
-      maxWorkspaceMembers: 10,
-      enableFileSharing: true
-    });
-    await collaborationTools.initialize();
+    // Initialize collaboration tools with error handling
+    try {
+      if (typeof CollaborationTools !== 'undefined') {
+        collaborationTools = new CollaborationTools({
+          enableRealTimeUpdates: true,
+          maxWorkspaceMembers: 10,
+          enableFileSharing: true
+        });
+        await collaborationTools.initialize();
+        console.log('CollaborationTools initialized successfully');
+      } else {
+        console.warn('CollaborationTools class not available, skipping initialization');
+      }
+    } catch (error) {
+      console.error('Error initializing CollaborationTools:', error);
+    }
     
-    // Initialize enterprise API
-    enterpriseAPI = new EnterpriseAPI({
-      enableCloudStorage: true,
-      enableCRM: false,
-      enableWorkflow: false
-    });
-    await enterpriseAPI.initialize();
+    // Initialize enterprise API with error handling
+    try {
+      if (typeof EnterpriseAPI !== 'undefined') {
+        enterpriseAPI = new EnterpriseAPI({
+          enableCloudStorage: true,
+          enableCRM: false,
+          enableWorkflow: false
+        });
+        await enterpriseAPI.initialize();
+        console.log('EnterpriseAPI initialized successfully');
+      } else {
+        console.warn('EnterpriseAPI class not available, skipping initialization');
+      }
+    } catch (error) {
+      console.error('Error initializing EnterpriseAPI:', error);
+    }
     
     // Setup Phase 3 UI handlers
-    setupPhase3UIHandlers();
+    try {
+      setupPhase3UIHandlers();
+      console.log('Phase 3 UI handlers setup successfully');
+    } catch (error) {
+      console.error('Error setting up Phase 3 UI handlers:', error);
+    }
     
-    console.log('Phase 3 modules initialized successfully');
+    console.log('Phase 3 modules initialization completed');
     toastManager.success('Advanced features loaded successfully!');
   } catch (error) {
     console.error('Error initializing Phase 3 modules:', error);
@@ -286,8 +327,8 @@ function setupTamilLanguageToggle() {
 // Setup Phase 3 UI Handlers
 function setupPhase3UIHandlers() {
   // Analytics Dashboard Handlers
-  const exportAnalyticsBtn = document.getElementById('exportAnalytics');
-  const resetAnalyticsBtn = document.getElementById('resetAnalytics');
+  const exportAnalyticsBtn = document.getElementById('exportAnalyticsBtn');
+  const resetAnalyticsBtn = document.getElementById('resetAnalyticsBtn');
   
   if (exportAnalyticsBtn) {
     exportAnalyticsBtn.addEventListener('click', async () => {
@@ -326,9 +367,9 @@ function setupPhase3UIHandlers() {
   // File Organization Handlers
   const autoOrganizeToggle = document.getElementById('autoOrganize');
   const organizationStrategy = document.getElementById('organizationStrategy');
-  const smartRenamingToggle = document.getElementById('smartRenaming');
-  const organizeFilesBtn = document.getElementById('organizeFiles');
-  const previewOrganizationBtn = document.getElementById('previewOrganization');
+  const smartRenamingToggle = document.getElementById('smartRename');
+  const organizeFilesBtn = document.getElementById('organizeNowBtn');
+  const previewOrganizationBtn = document.getElementById('previewOrganizationBtn');
   
   if (autoOrganizeToggle) {
     autoOrganizeToggle.addEventListener('change', (e) => {
@@ -506,35 +547,58 @@ function setupPhase3UIHandlers() {
     });
   }
   
-  // Update displays on load
-  updateAnalyticsDisplay();
-  updateFileOrganizationDisplay();
-  updateCollaborationDisplay();
-  updateIntegrationsDisplay();
+  // Update displays on load with error handling
+  try {
+    updateAnalyticsDisplay();
+  } catch (error) {
+    console.error('Error updating analytics display:', error);
+  }
+  
+  try {
+    updateFileOrganizationDisplay();
+  } catch (error) {
+    console.error('Error updating file organization display:', error);
+  }
+  
+  try {
+    updateCollaborationDisplay();
+  } catch (error) {
+    console.error('Error updating collaboration display:', error);
+  }
+  
+  try {
+    updateIntegrationsDisplay();
+  } catch (error) {
+    console.error('Error updating integrations display:', error);
+  }
 }
 
 // Helper functions for Phase 3 UI updates
 function updateAnalyticsDisplay() {
-  if (analyticsDashboard) {
-    const report = analyticsDashboard.generateReport();
-    
-    // Update processing stats with null checks
-    const totalFilesEl = document.getElementById('totalProcessedFiles');
-    const avgTimeEl = document.getElementById('avgProcessingTime');
-    const successRateEl = document.getElementById('successRate');
-    
-    // Use optional chaining and provide fallback values
-    if (totalFilesEl) {
-      totalFilesEl.textContent = report?.processing?.totalFiles ?? 0;
+  try {
+    if (typeof analyticsDashboard !== 'undefined' && analyticsDashboard) {
+      const report = analyticsDashboard.generateReport();
+      
+      // Update processing stats with null checks
+      const totalFilesEl = document.getElementById('totalProcessedFiles');
+      const avgTimeEl = document.getElementById('avgProcessingTime');
+      const successRateEl = document.getElementById('successRate');
+      
+      // Use optional chaining and provide fallback values
+      if (totalFilesEl && report) {
+        totalFilesEl.textContent = report?.processing?.totalFiles ?? 0;
+      }
+      if (avgTimeEl && report) {
+        const avgTime = report?.processing?.averageTime ?? 0;
+        avgTimeEl.textContent = `${avgTime}ms`;
+      }
+      if (successRateEl && report) {
+        const successRate = report?.processing?.successRate ?? 0;
+        successRateEl.textContent = `${successRate}%`;
+      }
     }
-    if (avgTimeEl) {
-      const avgTime = report?.processing?.averageTime ?? 0;
-      avgTimeEl.textContent = `${avgTime}ms`;
-    }
-    if (successRateEl) {
-      const successRate = report?.processing?.successRate ?? 0;
-      successRateEl.textContent = `${successRate}%`;
-    }
+  } catch (error) {
+    console.error('Error in updateAnalyticsDisplay:', error);
   }
 }
 
@@ -607,17 +671,23 @@ function updateCommentsDisplay() {
 }
 
 function updateIntegrationsDisplay() {
-  if (enterpriseAPI) {
-    const status = enterpriseAPI.getIntegrationStatus();
-    
-    // Update integration statuses
-    Object.entries(status).forEach(([integration, isConnected]) => {
-      const statusEl = document.getElementById(`${integration}Status`);
-      if (statusEl) {
-        statusEl.textContent = isConnected ? 'Connected' : 'Not connected';
-        statusEl.className = `status ${isConnected ? 'connected' : 'disconnected'}`;
+  try {
+    if (typeof enterpriseAPI !== 'undefined' && enterpriseAPI) {
+      const status = enterpriseAPI.getIntegrationStatus();
+      
+      // Update integration statuses with null safety
+      if (status && typeof status === 'object') {
+        Object.entries(status).forEach(([integration, isConnected]) => {
+          const statusEl = document.getElementById(`${integration}Status`);
+          if (statusEl) {
+            statusEl.textContent = isConnected ? 'Connected' : 'Not connected';
+            statusEl.className = `status ${isConnected ? 'connected' : 'disconnected'}`;
+          }
+        });
       }
-    });
+    }
+  } catch (error) {
+    console.error('Error in updateIntegrationsDisplay:', error);
   }
 }
 

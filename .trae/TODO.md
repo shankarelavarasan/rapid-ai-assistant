@@ -1,6 +1,6 @@
 # TODO:
 
-- [x] add-getCurrentSystemLoad: Add missing getCurrentSystemLoad() method in analyticsDashboard.js to fix 'this.getCurrentSystemLoad is not a function' error (priority: High)
-- [x] fix-currentWorkspace-script-null: Fix currentWorkspace null access in script.js line 559 at updateCollaborationDisplay function (priority: High)
-- [x] fix-gsap-target-undefined: Fix GSAP target undefined warnings by ensuring proper element selectors exist before animations (priority: Medium)
-- [x] improve-websocket-reconnection: Improve WebSocket reconnection logic to stop after max attempts instead of infinite retries (priority: Medium)
+- [x] fix-phase3-modules-error: Fix 'Cannot convert undefined or null to object' error in initializePhase3Modules at script.js:152 (priority: High)
+- [x] fix-websocket-error: Fix WebSocket error in collaborationTools.js:1084 (priority: High)
+- [x] fix-max-reconnection-error: Fix Max reconnection attempts error in collaborationTools.js:1115 (priority: High)
+- [x] remove-mode-buttons: Remove work mode and chat mode buttons from UI, keeping only work button and chat button (priority: Medium)

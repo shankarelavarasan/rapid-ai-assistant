@@ -1082,10 +1082,7 @@ class CollaborationTools {
             };
             
             this.websocket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.connectionState = 'error';
-                
-                // Don't attempt reconnection for localhost when server is not running
+                // Suppress error logging for expected connection failures
                 if (this.config.websocketUrl.includes('localhost')) {
                     console.warn('WebSocket server not available on localhost. Real-time features disabled.');
                     this.connectionState = 'disconnected';
@@ -1094,11 +1091,14 @@ class CollaborationTools {
                     return;
                 }
                 
+                console.warn('WebSocket connection error - attempting fallback mode');
+                this.connectionState = 'error';
+                
                 // Only attempt reconnection if we have attempts left
                 if (this.reconnectAttempts > 0) {
                     this.attemptReconnection();
                 } else {
-                    console.error('Max reconnection attempts reached. Enabling fallback UI.');
+                    console.log('Max reconnection attempts reached. Enabling fallback UI.');
                     this.enableFallbackUI();
                 }
             };
@@ -1113,7 +1113,7 @@ class CollaborationTools {
                     if (this.reconnectAttempts > 0) {
                         this.attemptReconnection();
                     } else {
-                        console.error('Max reconnection attempts reached. Enabling fallback UI.');
+                        console.log('Max reconnection attempts reached. Enabling fallback UI.');
                         this.enableFallbackUI();
                     }
                 }
@@ -1177,7 +1177,7 @@ class CollaborationTools {
      */
     attemptReconnection() {
         if (this.reconnectAttempts <= 0) {
-            console.error('Max reconnection attempts reached. Enabling fallback UI.');
+            console.log('Max reconnection attempts reached. Enabling fallback UI.');
             this.enableFallbackUI();
             return;
         }

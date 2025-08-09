@@ -41,7 +41,7 @@ class OnboardingManager {
             {
                 target: '.mobile-header',
                 title: 'Welcome to Rapid AI Assistant! 🚀',
-                content: 'This is your modern AI assistant interface. On mobile, use the hamburger menu to access controls. Choose between Work and Chat modes.',
+                content: 'This is your modern AI assistant interface. On mobile, use the hamburger menu to access controls. Choose between Work and Chat.',
                 position: 'bottom',
                 highlight: true
             },
