@@ -549,22 +549,50 @@ function updateFileOrganizationDisplay() {
 
 function updateCollaborationDisplay() {
   if (collaborationTools) {
-    const status = collaborationTools.getCollaborationStatus();
-    
-    // Update workspace info
-    const workspaceStatusEl = document.getElementById('workspaceStatus');
-    const workspaceDetailsEl = document.getElementById('workspaceDetails');
-    
-    if (workspaceStatusEl) {
-      workspaceStatusEl.textContent = status.currentWorkspace ? 'Connected' : 'Not connected';
-      workspaceStatusEl.className = `status ${status.currentWorkspace ? 'connected' : 'disconnected'}`;
-    }
-    
-    if (workspaceDetailsEl && status.currentWorkspace) {
-      workspaceDetailsEl.innerHTML = `
-        <div>Workspace: ${status.currentWorkspace?.name || 'Unknown'}</div>
-        <div>Members: ${status.currentWorkspace?.members || 0}</div>
-      `;
+    try {
+      const status = collaborationTools.getCollaborationStatus();
+      
+      // Update workspace info with null safety
+      const workspaceStatusEl = document.getElementById('workspaceStatus');
+      const workspaceDetailsEl = document.getElementById('workspaceDetails');
+      
+      if (workspaceStatusEl) {
+        const isConnected = status && status.currentWorkspace;
+        workspaceStatusEl.textContent = isConnected ? 'Connected' : 'Not connected';
+        workspaceStatusEl.className = `status ${isConnected ? 'connected' : 'disconnected'}`;
+      }
+      
+      if (workspaceDetailsEl) {
+        if (status && status.currentWorkspace) {
+          const workspace = status.currentWorkspace;
+          workspaceDetailsEl.innerHTML = `
+            <div>Workspace: ${workspace.name || 'Unknown'}</div>
+            <div>Members: ${workspace.members || 0}</div>
+          `;
+        } else {
+          workspaceDetailsEl.innerHTML = `
+            <div>Workspace: Not connected</div>
+            <div>Members: 0</div>
+          `;
+        }
+      }
+    } catch (error) {
+      console.warn('Error updating collaboration display:', error);
+      // Fallback display
+      const workspaceStatusEl = document.getElementById('workspaceStatus');
+      const workspaceDetailsEl = document.getElementById('workspaceDetails');
+      
+      if (workspaceStatusEl) {
+        workspaceStatusEl.textContent = 'Error';
+        workspaceStatusEl.className = 'status disconnected';
+      }
+      
+      if (workspaceDetailsEl) {
+        workspaceDetailsEl.innerHTML = `
+          <div>Workspace: Error loading</div>
+          <div>Members: 0</div>
+        `;
+      }
     }
   }
 }
@@ -1251,14 +1279,14 @@ function initializeImageSlider() {
   let autoplayInterval;
   
   function showSlide(index) {
-    if (isAnimating || index === currentSlide) return;
+    if (isAnimating || index === currentSlide || !slides[currentSlide] || !slides[index]) return;
     
     isAnimating = true;
     const prevSlide = slides[currentSlide];
     const nextSlide = slides[index];
     
-    // GSAP animation
-    if (window.gsap) {
+    // GSAP animation with element validation
+    if (window.gsap && prevSlide && nextSlide) {
       gsap.timeline()
         .to(prevSlide, {
           opacity: 0,
@@ -1285,16 +1313,20 @@ function initializeImageSlider() {
           }, "-=0.3"
         );
     } else {
-      // Fallback without GSAP
-      prevSlide.style.opacity = '0';
-      nextSlide.style.opacity = '1';
+      // Fallback without GSAP or when elements are missing
+      if (prevSlide) prevSlide.style.opacity = '0';
+      if (nextSlide) nextSlide.style.opacity = '1';
       isAnimating = false;
     }
     
-    // Update indicators
-    indicators.forEach((indicator, i) => {
-      indicator.classList.toggle('active', i === index);
-    });
+    // Update indicators with safety check
+    if (indicators && indicators.length > 0) {
+      indicators.forEach((indicator, i) => {
+        if (indicator) {
+          indicator.classList.toggle('active', i === index);
+        }
+      });
+    }
     
     currentSlide = index;
   }
@@ -1368,7 +1400,7 @@ function initialize3DCarousel() {
   function rotateCarousel(direction) {
     currentRotation += direction * angleStep;
     
-    if (window.gsap) {
+    if (window.gsap && carousel) {
       gsap.to(carousel, {
         rotationY: currentRotation,
         duration: 0.8,
@@ -1376,7 +1408,9 @@ function initialize3DCarousel() {
         onUpdate: positionItems
       });
     } else {
-      carousel.style.transform = `rotateY(${currentRotation}deg)`;
+      if (carousel) {
+        carousel.style.transform = `rotateY(${currentRotation}deg)`;
+      }
       positionItems();
     }
   }
@@ -1509,21 +1543,25 @@ function initializeGSAPElements() {
   const buttons = document.querySelectorAll('.btn, .glass-btn');
   if (buttons.length > 0) {
     buttons.forEach(button => {
-      if (button) {
+      if (button && button.nodeType === Node.ELEMENT_NODE) {
         button.addEventListener('mouseenter', () => {
-          gsap.to(button, {
-            scale: 1.05,
-            duration: 0.3,
-            ease: "power2.out"
-          });
+          if (button && window.gsap) {
+            gsap.to(button, {
+              scale: 1.05,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          }
         });
         
         button.addEventListener('mouseleave', () => {
-          gsap.to(button, {
-            scale: 1,
-            duration: 0.3,
-            ease: "power2.out"
-          });
+          if (button && window.gsap) {
+            gsap.to(button, {
+              scale: 1,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          }
         });
       }
     });

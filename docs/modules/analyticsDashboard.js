@@ -708,6 +708,160 @@ class AnalyticsDashboard {
     }
     
     /**
+     * Generate processing insights
+     * @returns {Array} Processing insights
+     */
+    generateProcessingInsights() {
+        const insights = [];
+        const metrics = this.analyticsData.processingMetrics || {};
+        
+        // Processing time insight
+        if (metrics.averageProcessingTime > 3000) {
+            insights.push({
+                type: 'processing',
+                priority: 8,
+                title: 'High Processing Time Detected',
+                description: `Average processing time is ${Math.round(metrics.averageProcessingTime)}ms, which is above optimal range.`,
+                recommendation: 'Consider optimizing processing algorithms or scaling resources.'
+            });
+        }
+        
+        // Success rate insight
+        const successRate = metrics.totalProcessed > 0 ? 
+            (metrics.successfulProcessing / metrics.totalProcessed) * 100 : 100;
+        if (successRate < 90) {
+            insights.push({
+                type: 'processing',
+                priority: 9,
+                title: 'Low Success Rate',
+                description: `Processing success rate is ${successRate.toFixed(1)}%, below the 90% target.`,
+                recommendation: 'Review error logs and improve error handling mechanisms.'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Generate usage insights
+     * @returns {Array} Usage insights
+     */
+    generateUsageInsights() {
+        const insights = [];
+        const patterns = this.analyticsData.usagePatterns || {};
+        
+        // Peak usage insight
+        if (patterns.hourlyDistribution) {
+            const maxUsage = Math.max(...patterns.hourlyDistribution);
+            const peakHour = patterns.hourlyDistribution.indexOf(maxUsage);
+            insights.push({
+                type: 'usage',
+                priority: 6,
+                title: 'Peak Usage Pattern Identified',
+                description: `Peak usage occurs at ${peakHour}:00 with ${maxUsage} operations.`,
+                recommendation: 'Consider resource scaling during peak hours.'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Generate performance insights
+     * @returns {Array} Performance insights
+     */
+    generatePerformanceInsights() {
+        const insights = [];
+        const systemLoad = this.getCurrentSystemLoad();
+        
+        if (systemLoad > 80) {
+            insights.push({
+                type: 'performance',
+                priority: 7,
+                title: 'High System Load',
+                description: `Current system load is ${systemLoad}%, approaching capacity limits.`,
+                recommendation: 'Monitor system resources and consider scaling if load persists.'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Generate quality insights
+     * @returns {Array} Quality insights
+     */
+    generateQualityInsights() {
+        const insights = [];
+        const qualityMetrics = this.analyticsData.qualityMetrics || {};
+        
+        if (qualityMetrics.ocrAccuracy && qualityMetrics.ocrAccuracy < 0.85) {
+            insights.push({
+                type: 'quality',
+                priority: 8,
+                title: 'OCR Accuracy Below Target',
+                description: `OCR accuracy is ${(qualityMetrics.ocrAccuracy * 100).toFixed(1)}%, below the 85% target.`,
+                recommendation: 'Review document quality and consider preprocessing improvements.'
+            });
+        }
+        
+        return insights;
+    }
+    
+    /**
+     * Identify peak usage hours
+     * @returns {Array} Peak hours array
+     */
+    identifyPeakHours() {
+        try {
+            const patterns = this.analyticsData.usagePatterns || {};
+            const hourlyDist = patterns.hourlyDistribution || [];
+            
+            if (hourlyDist.length === 0) {
+                return [];
+            }
+            
+            // Find hours with usage above 80% of max
+            const maxUsage = Math.max(...hourlyDist);
+            const threshold = maxUsage * 0.8;
+            
+            const peakHours = [];
+            hourlyDist.forEach((usage, hour) => {
+                if (usage >= threshold) {
+                    peakHours.push(`${hour}:00`);
+                }
+            });
+            
+            return peakHours;
+        } catch (error) {
+            console.warn('Error identifying peak hours:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Calculate low confidence rate
+     * @returns {number} Low confidence rate (0-1)
+     */
+    calculateLowConfidenceRate() {
+        try {
+            const qualityMetrics = this.analyticsData.qualityMetrics || {};
+            const confidenceScores = qualityMetrics.confidenceScores || [];
+            
+            if (confidenceScores.length === 0) {
+                return 0;
+            }
+            
+            // Count scores below 0.8 as low confidence
+            const lowConfidenceCount = confidenceScores.filter(score => score < 0.8).length;
+            return lowConfidenceCount / confidenceScores.length;
+        } catch (error) {
+            console.warn('Error calculating low confidence rate:', error);
+            return 0;
+        }
+    }
+    
+    /**
      * Get real-time dashboard data
      * @returns {Object} Real-time data
      */
@@ -1237,6 +1391,163 @@ class AnalyticsDashboard {
             successRate: this.analyticsData.processingMetrics?.totalProcessed > 0 ? 
                 (this.analyticsData.processingMetrics?.successfulProcessing / this.analyticsData.processingMetrics?.totalProcessed) * 100 : 0
         };
+    }
+
+    /**
+     * Get current system load
+     * @returns {number} Current system load percentage
+     */
+    getCurrentSystemLoad() {
+        try {
+            // Simulate system load based on processing metrics
+            const metrics = this.analyticsData.processingMetrics || {};
+            const recentEvents = this.realTimeStreams.processingEvents.slice(-10);
+            
+            // Base load calculation
+            let load = 20; // Base load
+            
+            // Add load based on recent processing activity
+            if (recentEvents.length > 0) {
+                load += Math.min(recentEvents.length * 5, 30);
+            }
+            
+            // Add load based on average processing time
+            if (metrics.averageProcessingTime > 2000) {
+                load += 15;
+            } else if (metrics.averageProcessingTime > 1000) {
+                load += 10;
+            }
+            
+            // Add random variation to simulate real system load
+            load += Math.random() * 10;
+            
+            return Math.min(Math.round(load), 100);
+        } catch (error) {
+            console.warn('Error getting system load:', error);
+            return 25; // Default load
+        }
+    }
+
+    /**
+     * Get active user count
+     * @returns {number} Number of active users
+     */
+    getActiveUserCount() {
+        try {
+            // Simulate active users based on recent user actions
+            const recentActions = this.realTimeStreams.userActions.slice(-20);
+            const uniqueUsers = new Set();
+            
+            // Count unique session IDs from recent actions
+            recentActions.forEach(action => {
+                if (action.sessionId) {
+                    uniqueUsers.add(action.sessionId);
+                }
+            });
+            
+            // If no recent actions, simulate based on usage patterns
+            if (uniqueUsers.size === 0) {
+                const currentHour = new Date().getHours();
+                const hourlyDist = this.analyticsData.usagePatterns?.hourlyDistribution || [];
+                const hourlyUsage = hourlyDist[currentHour] || 0;
+                return Math.max(1, Math.round(hourlyUsage / 10));
+            }
+            
+            return uniqueUsers.size;
+        } catch (error) {
+            console.warn('Error getting active user count:', error);
+            return 1; // Default to 1 user
+        }
+    }
+
+    /**
+     * Get processing queue status
+     * @returns {Object} Processing queue information
+     */
+    getProcessingQueueStatus() {
+        try {
+            const recentEvents = this.realTimeStreams.processingEvents.slice(-5);
+            const pendingCount = recentEvents.filter(event => event.status === 'pending').length;
+            const processingCount = recentEvents.filter(event => event.status === 'processing').length;
+            
+            return {
+                pending: pendingCount,
+                processing: processingCount,
+                total: pendingCount + processingCount,
+                avgWaitTime: this.calculateAverageWaitTime(),
+                status: pendingCount > 5 ? 'busy' : pendingCount > 2 ? 'moderate' : 'idle'
+            };
+        } catch (error) {
+            console.warn('Error getting processing queue status:', error);
+            return {
+                pending: 0,
+                processing: 0,
+                total: 0,
+                avgWaitTime: 0,
+                status: 'idle'
+            };
+        }
+    }
+
+    /**
+     * Calculate average wait time for processing queue
+     * @returns {number} Average wait time in milliseconds
+     */
+    calculateAverageWaitTime() {
+        try {
+            const metrics = this.analyticsData.processingMetrics || {};
+            const avgProcessingTime = metrics.averageProcessingTime || 1000;
+            const systemLoad = this.getCurrentSystemLoad();
+            
+            // Estimate wait time based on processing time and system load
+            const baseWaitTime = avgProcessingTime * 0.1; // 10% of processing time
+            const loadMultiplier = 1 + (systemLoad / 100); // Increase with load
+            
+            return Math.round(baseWaitTime * loadMultiplier);
+        } catch (error) {
+            console.warn('Error calculating average wait time:', error);
+            return 500; // Default 500ms
+        }
+    }
+
+    /**
+     * Calculate live metrics for real-time dashboard
+     * @param {string} metricType - Type of metric to calculate
+     * @returns {number} Calculated metric value
+     */
+    calculateLiveMetric(metricType) {
+        try {
+            const recentEvents = this.realTimeStreams.processingEvents.slice(-10);
+            const timeWindow = 60000; // 1 minute window
+            const currentTime = Date.now();
+            
+            switch (metricType) {
+                case 'documentsPerMinute':
+                    const recentDocs = recentEvents.filter(event => 
+                        currentTime - event.timestamp < timeWindow
+                    );
+                    return recentDocs.length;
+                    
+                case 'averageResponseTime':
+                    const responseTimes = recentEvents
+                        .filter(event => event.processingTime)
+                        .map(event => event.processingTime);
+                    if (responseTimes.length === 0) return 0;
+                    return Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length);
+                    
+                case 'errorRate':
+                    if (recentEvents.length === 0) return 0;
+                    const errorCount = recentEvents.filter(event => event.success === false).length;
+                    return Math.round((errorCount / recentEvents.length) * 100);
+                    
+                default:
+                    console.warn(`Unknown metric type: ${metricType}`);
+                    return 0;
+            }
+        } catch (error) {
+            console.warn(`Error calculating live metric ${metricType}:`, error);
+            return 0;
+        }
     }
 
     /**

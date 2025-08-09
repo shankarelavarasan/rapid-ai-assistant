@@ -1089,10 +1089,18 @@ class CollaborationTools {
                 if (this.config.websocketUrl.includes('localhost')) {
                     console.warn('WebSocket server not available on localhost. Real-time features disabled.');
                     this.connectionState = 'disconnected';
+                    // Enable fallback UI for localhost errors
+                    this.enableFallbackUI();
                     return;
                 }
                 
-                this.attemptReconnection();
+                // Only attempt reconnection if we have attempts left
+                if (this.reconnectAttempts > 0) {
+                    this.attemptReconnection();
+                } else {
+                    console.error('Max reconnection attempts reached. Enabling fallback UI.');
+                    this.enableFallbackUI();
+                }
             };
             
             this.websocket.onclose = (event) => {
@@ -1101,8 +1109,13 @@ class CollaborationTools {
                 this.stopHeartbeat();
                 
                 // Attempt reconnection if not intentionally closed
-                if (event.code !== 1000 && this.reconnectAttempts > 0) {
-                    this.attemptReconnection();
+                if (event.code !== 1000) {
+                    if (this.reconnectAttempts > 0) {
+                        this.attemptReconnection();
+                    } else {
+                        console.error('Max reconnection attempts reached. Enabling fallback UI.');
+                        this.enableFallbackUI();
+                    }
                 }
             };
             
@@ -1164,7 +1177,8 @@ class CollaborationTools {
      */
     attemptReconnection() {
         if (this.reconnectAttempts <= 0) {
-            console.error('Max reconnection attempts reached');
+            console.error('Max reconnection attempts reached. Enabling fallback UI.');
+            this.enableFallbackUI();
             return;
         }
         

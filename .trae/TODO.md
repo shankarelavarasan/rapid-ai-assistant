@@ -1,7 +1,6 @@
 # TODO:
 
-- [x] add-getPredictiveAnalytics: Add missing getPredictiveAnalytics() method in analyticsDashboard.js AnalyticsDashboard class (priority: High)
-- [x] fix-currentWorkspace-null-access: Add null checks for currentWorkspace property access to prevent null pointer errors (priority: High)
-- [x] import-scrolltrigger-gsap: Import ScrollTrigger GSAP plugin in docs/index.html to fix 'ScrollTrigger is not defined' error (priority: Medium)
-- [x] improve-websocket-error-handling: Improve WebSocket error handling with fallback UI for real-time features (priority: Medium)
-- [x] fix-gsap-target-warnings: Fix GSAP target undefined warnings by adding proper selectors and DOMContentLoaded checks (priority: Medium)
+- [x] add-getCurrentSystemLoad: Add missing getCurrentSystemLoad() method in analyticsDashboard.js to fix 'this.getCurrentSystemLoad is not a function' error (priority: High)
+- [x] fix-currentWorkspace-script-null: Fix currentWorkspace null access in script.js line 559 at updateCollaborationDisplay function (priority: High)
+- [x] fix-gsap-target-undefined: Fix GSAP target undefined warnings by ensuring proper element selectors exist before animations (priority: Medium)
+- [x] improve-websocket-reconnection: Improve WebSocket reconnection logic to stop after max attempts instead of infinite retries (priority: Medium)
