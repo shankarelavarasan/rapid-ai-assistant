@@ -36,8 +36,8 @@ class UIManager {
       previewContainer: document.getElementById('previewContainer'),
       previewContent: document.getElementById('previewContent'),
       leftPanel: document.querySelector('.left-panel'),
-      workModeBtn: document.getElementById('workModeBtn'),
-      chatModeBtn: document.getElementById('chatModeBtn'),
+      workBtn: document.getElementById('workBtn'),
+    chatBtn: document.getElementById('chatBtn'),
       promptContainer: document.querySelector('.prompt-container'),
       progressBar: document.getElementById('progressBar'),
       progressContainer: document.getElementById('progressContainer'),
@@ -46,16 +46,16 @@ class UIManager {
   }
 
   initializeEventHandlers() {
-    if (this.elements.workModeBtn) {
-      this.elements.workModeBtn.addEventListener('click', () =>
-        this.setMode('work')
-      );
-    }
-    if (this.elements.chatModeBtn) {
-      this.elements.chatModeBtn.addEventListener('click', () =>
-        this.setMode('chat')
-      );
-    }
+    if (this.elements.workBtn) {
+            this.elements.workBtn.addEventListener('click', () =>
+                this.setMode('work')
+            );
+        }
+        if (this.elements.chatBtn) {
+            this.elements.chatBtn.addEventListener('click', () =>
+                this.setMode('chat')
+            );
+        }
     if (this.elements.resetBtn) {
       this.elements.resetBtn.addEventListener('click', () => this.resetPrompt());
     }
@@ -87,12 +87,12 @@ class UIManager {
     }
 
     // Update mode buttons with null checks
-    if (this.elements.workModeBtn) {
-      this.elements.workModeBtn.classList.toggle('active', mode === 'work');
-    }
-    if (this.elements.chatModeBtn) {
-      this.elements.chatModeBtn.classList.toggle('active', mode === 'chat');
-    }
+    if (this.elements.workBtn) {
+            this.elements.workBtn.classList.toggle('active', mode === 'work');
+        }
+        if (this.elements.chatBtn) {
+            this.elements.chatBtn.classList.toggle('active', mode === 'chat');
+        }
   }
 
   setProcessingState(isProcessing) {

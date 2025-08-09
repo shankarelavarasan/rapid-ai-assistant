@@ -1076,10 +1076,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Synchronize desktop and mobile mode buttons
   function synchronizeModeButtons() {
-    const workBtn = document.getElementById('workModeBtn');
-    const chatBtn = document.getElementById('chatModeBtn');
-    const workBtnDesktop = document.getElementById('workModeBtnDesktop');
-    const chatBtnDesktop = document.getElementById('chatModeBtnDesktop');
+    const workBtn = document.getElementById('workBtn');
+    const chatBtn = document.getElementById('chatBtn');
+    const workBtnDesktop = document.getElementById('workBtnDesktop');
+    const chatBtnDesktop = document.getElementById('chatBtnDesktop');
     
     // Sync mobile to desktop
     if (workBtn && workBtnDesktop) {

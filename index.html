@@ -11,35 +11,77 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 2rem;
+            gap: 1rem;
         }
         .step {
             flex: 1;
             text-align: center;
-            padding: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.5rem;
-            margin: 0 0.5rem;
+            padding: 1.5rem 1rem;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e2e8f0, #e2e8f0);
             transition: all 0.3s ease;
         }
         .step.active {
-            border-color: #4f46e5;
-            background-color: #eef2ff;
+            background: linear-gradient(145deg, #eef2ff, #ddd6fe);
+            border-color: #6366f1;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+        }
+        .step.active::before {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
         }
         .step.completed {
-            border-color: #10b981;
-            background-color: #f0fdf4;
+            background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+            border-color: #22c55e;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+        }
+        .step.completed::before {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
         }
         .upload-zone {
-            border: 2px dashed #d1d5db;
-            border-radius: 0.5rem;
-            padding: 2rem;
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 3rem 2rem;
             text-align: center;
-            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         .upload-zone:hover, .upload-zone.dragover {
-            border-color: #4f46e5;
-            background-color: #f8fafc;
+            border-color: #6366f1;
+            background: linear-gradient(145deg, #f8fafc, #eef2ff);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+        }
+        .upload-zone:hover::before, .upload-zone.dragover::before {
+            opacity: 1;
         }
         .file-item {
             display: flex;
@@ -68,20 +110,37 @@
             right: 20px;
             width: 350px;
             height: 500px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: none;
             flex-direction: column;
+            overflow: hidden;
         }
         .chat-header {
-            background: #4f46e5;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
             color: white;
-            padding: 1rem;
-            border-radius: 10px 10px 0 0;
+            padding: 1.5rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+        }
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .chat-header:hover::before {
+            opacity: 1;
         }
         .chat-messages {
             flex: 1;
@@ -197,13 +256,18 @@
         
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
+            body {
+                padding: 0;
+            }
+            
+            .w-full {
+                padding: 0.5rem;
             }
             
             header .flex {
                 flex-direction: column;
                 gap: 1rem;
+                padding: 0 1rem;
             }
             
             #tamilToggle {
@@ -214,6 +278,7 @@
             .step-indicator {
                 flex-direction: column;
                 gap: 0.5rem;
+                margin: 0 1rem;
             }
             
             .step {
@@ -239,6 +304,11 @@
                 bottom: 0;
                 right: 0;
                 border-radius: 0;
+            }
+            
+            .bg-white {
+                margin: 0.5rem;
+                border-radius: 0.5rem;
             }
         }
         
@@ -281,7 +351,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="w-full min-h-screen px-4 py-8">
         <header class="text-center mb-8">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex-1"></div>
@@ -329,7 +399,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-white/20" style="background: linear-gradient(145deg, #ffffff, #f8fafc);">
             <!-- Step 1: Enhanced Folder Upload -->
             <div id="step1-content" class="step-content">
                 <h2 class="text-2xl font-bold mb-4" data-tamil="ஆவணங்களை பதிவேற்றவும்">📁 Upload Documents</h2>
@@ -342,14 +412,14 @@
                         <p class="text-gray-600 mb-4" data-tamil="PDF, DOCX, XLSX, CSV கோப்புகளைக் கொண்ட கோப்புறையை இழுத்து விடவும் அல்லது கிளிக் செய்யவும்">Drag & drop or click to select folder containing PDF, DOCX, XLSX, CSV files</p>
                         <input type="file" id="folderInput" webkitdirectory directory multiple 
                                accept=".pdf,.docx,.xlsx,.csv,.json,.txt" style="display: none;">
-                        <div class="flex gap-2 justify-center">
+                        <div class="flex gap-3 justify-center">
                             <button onclick="document.getElementById('folderInput').click()" 
-                                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700" data-tamil="கோப்புறையை உலாவவும்">
-                                Browse Folder
+                                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl" data-tamil="கோப்புறையை உலாவவும்">
+                                📁 Browse Folder
                             </button>
                             <button onclick="selectAdvancedFolder()" 
-                                    class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700" data-tamil="மேம்பட்ட தேர்வு">
-                                Advanced Select
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl" data-tamil="மேம்பட்ட தேர்வு">
+                                ⚙️ Advanced Select
                             </button>
                         </div>
                     </div>
