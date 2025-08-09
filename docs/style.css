@@ -30,15 +30,15 @@
   --error: #ef4444;
   --info: #3b82f6;
   
-  /* Spacing (8px grid system) */
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
-  --space-5: 40px;
-  --space-6: 48px;
-  --space-8: 64px;
-  --space-10: 80px;
+  /* Spacing (6px grid system - more compact) */
+  --space-1: 6px;
+  --space-2: 12px;
+  --space-3: 18px;
+  --space-4: 24px;
+  --space-5: 30px;
+  --space-6: 36px;
+  --space-8: 48px;
+  --space-10: 60px;
   
   /* Border Radius */
   --radius-sm: 4px;
@@ -706,7 +706,7 @@ body {
 
 /* Left Panel */
 .left-panel {
-  width: 280px;
+  width: 240px;
   background-color: var(--white);
   border-right: 1px solid var(--gray-200);
   display: flex;
@@ -716,7 +716,7 @@ body {
 }
 
 .panel-section {
-  padding: var(--space-3);
+  padding: var(--space-2);
   border-bottom: 1px solid var(--gray-100);
 }
 
@@ -745,20 +745,20 @@ body {
 .chat-container {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-3);
+  padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 /* Prompt Container */
 .prompt-container {
   background-color: var(--white);
   border-top: 1px solid var(--gray-200);
-  padding: var(--space-3);
+  padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   box-shadow: var(--shadow-md);
 }
 
@@ -772,12 +772,12 @@ body {
 /* Form Elements */
 #promptTextarea {
   width: 100%;
-  min-height: 80px;
-  padding: var(--space-2);
+  min-height: 60px;
+  padding: var(--space-1);
   border: 1px solid var(--gray-300);
   border-radius: var(--radius);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   line-height: var(--leading-normal);
   resize: vertical;
   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -791,11 +791,11 @@ body {
 
 select {
   width: 100%;
-  padding: var(--space-2);
+  padding: var(--space-1);
   border: 1px solid var(--gray-300);
   border-radius: var(--radius);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   background-color: var(--white);
   cursor: pointer;
   transition: border-color 0.2s ease-in-out;
@@ -867,11 +867,11 @@ select.success {
 
 /* Button Styles */
 button {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-2);
   border: none;
   border-radius: var(--radius);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -879,7 +879,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  min-height: 44px; /* Touch-friendly */
+  min-height: 36px; /* More compact but still touch-friendly */
 }
 
 /* Primary Button */
@@ -1536,6 +1536,8 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 50px;
+    padding: 0 var(--space-2);
   }
   
   .desktop-mode {
@@ -1548,12 +1550,12 @@ button {
   
   .container {
     flex-direction: column;
-    height: calc(100vh - 70px);
+    height: calc(100vh - 50px);
   }
   
   .left-panel {
     width: 100%;
-    max-height: 200px;
+    max-height: 150px;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
   }
@@ -1564,9 +1566,10 @@ button {
   }
   
   .mode-selection button {
-    min-width: 80px;
+    min-width: 60px;
     font-size: var(--font-size-xs);
-    padding: var(--space-1) var(--space-2);
+    padding: 4px 8px;
+    min-height: 28px;
   }
   
   .button-group {
@@ -1576,34 +1579,62 @@ button {
   .button-group button {
     flex: 1;
     min-width: 0;
+    font-size: var(--font-size-xs);
+    padding: var(--space-1);
   }
   
   .toast {
-    min-width: 280px;
-    max-width: calc(100vw - var(--space-6));
+    min-width: 200px;
+    max-width: calc(100vw - var(--space-4));
   }
   
   .toast-container {
-    left: var(--space-3);
-    right: var(--space-3);
+    left: var(--space-2);
+    right: var(--space-2);
   }
 }
 
 @media (max-width: 480px) {
+  .mobile-header {
+    height: 45px;
+    padding: 0 var(--space-1);
+  }
+  
+  .container {
+    height: calc(100vh - 45px);
+  }
+  
   .prompt-container {
-    padding: var(--space-2);
+    padding: var(--space-1);
   }
   
   .chat-container {
-    padding: var(--space-2);
+    padding: var(--space-1);
   }
   
   .panel-section {
-    padding: var(--space-2);
+    padding: var(--space-1);
+  }
+  
+  .left-panel {
+    max-height: 120px;
   }
   
   button {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    padding: 3px 6px;
+    min-height: 30px;
+  }
+  
+  .mode-selection button {
+    min-width: 50px;
+    padding: 2px 6px;
+    min-height: 24px;
+  }
+  
+  #promptTextarea {
+    min-height: 40px;
+    font-size: var(--font-size-xs);
   }
 }
 
