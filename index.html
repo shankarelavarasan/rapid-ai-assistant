@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapid AI Assistant - Document Processor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e2e8f0, #e2e8f0);
+            transition: all 0.3s ease;
+        }
+        .step.active {
+            background: linear-gradient(145deg, #eef2ff, #ddd6fe);
+            border-color: #6366f1;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+        }
+        .step.active::before {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        .step.completed {
+            background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+            border-color: #22c55e;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+        }
+        .step.completed::before {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #6366f1;
+            background: linear-gradient(145deg, #f8fafc, #eef2ff);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+        }
+        .upload-zone:hover::before, .upload-zone.dragover::before {
+            opacity: 1;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background-color: #f9fafb;
+            border-radius: 0.25rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4f46e5;
+            transition: width 0.3s ease;
+        }
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 1.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .chat-header:hover::before {
+            opacity: 1;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .message {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            max-width: 80%;
+        }
+        .message.user {
+            background-color: #4f46e5;
+            color: white;
+            margin-left: auto;
+        }
+        .message.ai {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .approval-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .approval-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        /* Tamil Language Toggle Styles */
+        #tamilToggle {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        #tamilToggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        #tamilToggle.active {
+            background-color: #f97316;
+            border: 2px solid #ea580c;
+        }
+        
+        /* Enhanced Progress Indicators */
+        .batch-status-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .batch-status-card.processing {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        .batch-status-card.completed {
+            border-left-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        
+        .batch-status-card.error {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        /* Smart Suggestions Animation */
+        #tamilPromptSuggestions {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Data Table Styles */
+        #dataTable table {
+            border-collapse: collapse;
+        }
+        
+        #dataTable th,
+        #dataTable td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        #dataTable th {
+            font-weight: 600;
+            background-color: #f9fafb;
+        }
+        
+        #dataTable tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            
+            .w-full {
+                padding: 0.5rem;
+            }
+            
+            header .flex {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+            
+            #tamilToggle {
+                align-self: center;
+                margin-top: 1rem;
+            }
+            
+            .step-indicator {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin: 0 1rem;
+            }
+            
+            .step {
+                margin: 0;
+                padding: 0.75rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .approval-buttons {
+                flex-direction: column;
+            }
+            
+            #tamilPromptSuggestions .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-container {
+                width: 100vw;
+                height: 100vh;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+            
+            .bg-white {
+                margin: 0.5rem;
+                border-radius: 0.5rem;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Status Icons Animation */
+        .status-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .status-icon.pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="w-full min-h-screen px-4 py-8">
+        <header class="text-center mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex-1"></div>
+                <div class="flex-1">
+                    <h1 class="text-4xl font-bold text-indigo-700 mb-2">🚀 Rapid AI Assistant</h1>
+                    <p class="text-gray-600 text-lg">AI-Powered Document Processing & Data Entry Automation</p>
+                </div>
+                <div class="flex-1 flex justify-end">
+                    <!-- Tamil Language Toggle -->
+                    <button id="tamilToggle" onclick="toggleTamilLanguage()" 
+                            class="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors duration-200 flex items-center gap-2">
+                        <span id="tamilToggleIcon">🇮🇳</span>
+                        <span id="tamilToggleText">தமிழ்</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" data-step="1">
+                <div class="text-lg font-semibold">📁</div>
+                <div>Upload Documents</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="text-lg font-semibold">📄</div>
+                <div>Upload Template</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="text-lg font-semibold">💬</div>
+                <div>Define Task</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="text-lg font-semibold">⚙️</div>
+                <div>Processing</div>
+            </div>
+            <div class="step" data-step="5">
+                <div class="text-lg font-semibold">✅</div>
+                <div>Review & Approve</div>
+            </div>
+            <div class="step" data-step="6">
+                <div class="text-lg font-semibold">📤</div>
+                <div>Export Results</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm border border-white/20" style="background: linear-gradient(145deg, #ffffff, #f8fafc);">
+            <!-- Step 1: Enhanced Folder Upload -->
+            <div id="step1-content" class="step-content">
+                <h2 class="text-2xl font-bold mb-4" data-tamil="ஆவணங்களை பதிவேற்றவும்">📁 Upload Documents</h2>
+                
+                <!-- Enhanced Folder Selection with Progress -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="upload-zone" id="folderUploadZone">
+                        <div class="text-4xl mb-4">📂</div>
+                        <h3 class="text-xl font-semibold mb-2" data-tamil="ஆவணங்களுடன் கூடிய கோப்புறையைத் தேர்ந்தெடுக்கவும்">Select Folder with Documents</h3>
+                        <p class="text-gray-600 mb-4" data-tamil="PDF, DOCX, XLSX, CSV கோப்புகளைக் கொண்ட கோப்புறையை இழுத்து விடவும் அல்லது கிளிக் செய்யவும்">Drag & drop or click to select folder containing PDF, DOCX, XLSX, CSV files</p>
+                        <input type="file" id="folderInput" webkitdirectory directory multiple 
+                               accept=".pdf,.docx,.xlsx,.csv,.json,.txt" style="display: none;">
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="document.getElementById('folderInput').click()" 
+                                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl" data-tamil="கோப்புறையை உலாவவும்">
+                                📁 Browse Folder
+                            </button>
+                            <button onclick="selectAdvancedFolder()" 
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl" data-tamil="மேம்பட்ட தேர்வு">
+                                ⚙️ Advanced Select
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Folder Processing Progress -->
+                    <div id="folderProgress" class="bg-gray-50 rounded-lg p-4" style="display: none;">
+                        <h4 class="font-semibold mb-3" data-tamil="கோப்பு செயலாக்க முன்னேற்றம்">Folder Processing Progress</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span data-tamil="ஸ்கேன் செய்யப்பட்ட கோப்புகள்">Files Scanned:</span>
+                                <span id="scannedCount">0</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span data-tamil="ஆதரிக்கப்படும் வகைகள்">Supported Types:</span>
+                                <span id="supportedCount">0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="scanProgressFill" style="width: 0%"></div>
+                            </div>
+                            <div id="batchStatus" class="text-xs text-gray-600" data-tamil="தயாராக உள்ளது...">Ready to scan...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="folderPreview" class="mt-4" style="display: none;">
+                    <h3 class="font-semibold mb-2" data-tamil="தேர்ந்தெடுக்கப்பட்ட கோப்புகள்:">Selected Files:</h3>
+                    <div id="fileList" class="max-h-64 overflow-y-auto border rounded-md p-2"></div>
+                    <p id="fileCount" class="text-sm text-gray-600 mt-2"></p>
+                </div>
+                
+                <!-- Smart Prompt Suggestions for Tamil Users -->
+                <div id="tamilPromptSuggestions" class="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4" style="display: none;">
+                    <h4 class="font-semibold text-orange-800 mb-3">🇮🇳 தமிழ் பயனர்களுக்கான ஸ்மார்ட் பரிந்துரைகள்</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onclick="applySuggestion('invoice-tamil')" class="text-left p-3 bg-white border border-orange-300 rounded-md hover:bg-orange-100">
+                            <div class="font-medium">விலைப்பட்டியல் தரவு பிரித்தெடுத்தல்</div>
+                            <div class="text-sm text-gray-600">கம்பெனி பெயர், தொகை, தேதி</div>
+                        </button>
+                        <button onclick="applySuggestion('receipt-tamil')" class="text-left p-3 bg-white border border-orange-300 rounded-md hover:bg-orange-100">
+                            <div class="font-medium">ரசீது செயலாக்கம்</div>
+                            <div class="text-sm text-gray-600">வாங்கிய பொருட்கள், விலை</div>
+                        </button>
+                        <button onclick="applySuggestion('form-tamil')" class="text-left p-3 bg-white border border-orange-300 rounded-md hover:bg-orange-100">
+                            <div class="font-medium">படிவ தரவு நுழைவு</div>
+                            <div class="text-sm text-gray-600">பெயர், முகவரி, தொலைபேசி</div>
+                        </button>
+                        <button onclick="applySuggestion('custom-tamil')" class="text-left p-3 bg-white border border-orange-300 rounded-md hover:bg-orange-100">
+                            <div class="font-medium">தனிப்பயன் செயலாக்கம்</div>
+                            <div class="text-sm text-gray-600">உங்கள் தேவைகளுக்கு ஏற்ப</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="nextStep(2)" id="nextStep1" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700" style="display: none;" data-tamil="அடுத்த படி">
+                    Next Step
+                </button>
+            </div>
+
+            <!-- Step 2: Template Upload -->
+            <div id="step2-content" class="step-content" style="display: none;">
+                <h2 class="text-2xl font-bold mb-4">📄 Upload Excel Template</h2>
+                <div class="upload-zone" id="templateUploadZone">
+                    <div class="text-4xl mb-4">📤</div>
+                    <h3 class="text-xl font-semibold mb-2">Select Your Excel Template</h3>
+                    <p class="text-gray-600 mb-4">Choose your custom Excel template (.xlsx) for the output format</p>
+                    <input type="file" id="templateInput" accept=".xlsx" style="display: none;">
+                    <button onclick="document.getElementById('templateInput').click()" 
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
+                        Browse Template
+                    </button>
+                </div>
+                <div id="templatePreview" class="mt-4" style="display: none;">
+                    <h3 class="font-semibold mb-2">Template Structure:</h3>
+                    <div id="templateStructure" class="border rounded-md p-2"></div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="prevStep(1)" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700">
+                        Previous
+                    </button>
+                    <button onclick="nextStep(3)" id="nextStep2" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700" style="display: none;">
+                        Next Step
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Prompt Input -->
+            <div id="step3-content" class="step-content" style="display: none;">
+                <h2 class="text-2xl font-bold mb-4">💬 Define Your Task</h2>
+                <div class="prompt-section">
+                    <label for="promptInput" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Task / Prompt:
+                    </label>
+                    <textarea id="promptInput" rows="4" 
+                              class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Example: Extract all invoice data and populate this Excel template with company names, amounts, and dates. If any information is missing, ask for approval before proceeding."></textarea>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Describe what data you want to extract and how to populate your template
+                    </p>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="prevStep(2)" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700">
+                        Previous
+                    </button>
+                    <button onclick="nextStep(4)" id="nextStep3" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
+                        Next Step
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Enhanced Processing with Batch Indicators -->
+            <div id="step4-content" class="step-content" style="display: none;">
+                <h2 class="text-2xl font-bold mb-4" data-tamil="ஆவணங்களை செயலாக்குதல்">⚙️ Processing Documents</h2>
+                
+                <!-- Batch Processing Status Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-blue-800" data-tamil="OCR செயலாக்கம்">OCR Processing</h4>
+                                <p class="text-sm text-blue-600" data-tamil="உரை பிரித்தெடுத்தல்">Text Extraction</p>
+                            </div>
+                            <div id="ocrStatus" class="text-2xl">⏳</div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-blue-500" id="ocrProgress" style="width: 0%"></div>
+                            </div>
+                            <p id="ocrCount" class="text-xs text-blue-600 mt-1" data-tamil="0/0 கோப்புகள்">0/0 files</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-green-800" data-tamil="AI பகுப்பாய்வு">AI Analysis</h4>
+                                <p class="text-sm text-green-600" data-tamil="தரவு வகைப்படுத்தல்">Data Classification</p>
+                            </div>
+                            <div id="aiStatus" class="text-2xl">⏳</div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-green-500" id="aiProgress" style="width: 0%"></div>
+                            </div>
+                            <p id="aiCount" class="text-xs text-green-600 mt-1" data-tamil="0/0 ஆவணங்கள்">0/0 documents</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-purple-800" data-tamil="தரவு ஏற்றுமதி">Data Export</h4>
+                                <p class="text-sm text-purple-600" data-tamil="Excel உருவாக்கம்">Excel Generation</p>
+                            </div>
+                            <div id="exportStatus" class="text-2xl">⏳</div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-purple-500" id="exportProgress" style="width: 0%"></div>
+                            </div>
+                            <p id="exportCount" class="text-xs text-purple-600 mt-1" data-tamil="0/0 வரிசைகள்">0/0 rows</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="processing-section">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-semibold" data-tamil="ஒட்டுமొத்த முன்னேற்றம்">Overall Progress</h3>
+                            <span id="overallPercentage" class="text-sm font-medium">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="text-center mt-2" data-tamil="செயலாக்கத்தைத் தொடங்க தயாராக உள்ளது...">Ready to start processing...</p>
+                    </div>
+                    
+                    <!-- Real-time Processing Log -->
+                    <div class="mb-4">
+                        <h4 class="font-semibold mb-2" data-tamil="செயலாக்க பதிவு">Processing Log</h4>
+                        <div id="processingLog" class="border rounded-md p-4 max-h-64 overflow-y-auto bg-gray-50 font-mono text-sm"></div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="startProcessing" onclick="startProcessing()" 
+                                class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700" data-tamil="செயலாக்கத்தைத் தொடங்கவும்">
+                            Start Processing
+                        </button>
+                        <button id="pauseProcessing" onclick="pauseProcessing()" 
+                                class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700" style="display: none;" data-tamil="இடைநிறுத்தவும்">
+                            Pause
+                        </button>
+                        <button id="stopProcessing" onclick="stopProcessing()" 
+                                class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700" style="display: none;" data-tamil="நிறுத்தவும்">
+                            Stop
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="prevStep(3)" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700" data-tamil="முந்தைய">
+                        Previous
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Enhanced Review & Approval with Results Display -->
+            <div id="step5-content" class="step-content" style="display: none;">
+                <h2 class="text-2xl font-bold mb-4" data-tamil="மதிப்பாய்வு மற்றும் ஒப்புதல்">✅ Review & Approve</h2>
+                
+                <!-- Document Classification Results -->
+                <div id="classificationResults" class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4" data-tamil="ஆவண வகைப்படுத்தல் முடிவுகள்">Document Classification Results</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800" data-tamil="விலைப்பட்டியல்கள்">Invoices</h4>
+                            <p class="text-2xl font-bold text-blue-600" id="invoiceCount">0</p>
+                            <p class="text-sm text-blue-600" data-tamil="கோப்புகள் கண்டறியப்பட்டன">files detected</p>
+                        </div>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-800" data-tamil="ரசீதுகள்">Receipts</h4>
+                            <p class="text-2xl font-bold text-green-600" id="receiptCount">0</p>
+                            <p class="text-sm text-green-600" data-tamil="கோப்புகள் கண்டறியப்பட்டன">files detected</p>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-purple-800" data-tamil="படிவங்கள்">Forms</h4>
+                            <p class="text-2xl font-bold text-purple-600" id="formCount">0</p>
+                            <p class="text-sm text-purple-600" data-tamil="கோப்புகள் கண்டறியப்பட்டன">files detected</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Structured Data Preview -->
+                <div id="dataPreview" class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4" data-tamil="பிரித்தெடுக்கப்பட்ட தரவு முன்னோட்டம்">Extracted Data Preview</h3>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium" data-tamil="மொத்தம்">Total Records:</span>
+                                <span id="totalRecords" class="font-bold">0</span>
+                            </div>
+                        </div>
+                        <div id="dataTable" class="max-h-96 overflow-y-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr id="tableHeaders">
+                                        <!-- Dynamic headers will be inserted here -->
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <!-- Dynamic data rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Confidence and Quality Metrics -->
+                <div id="qualityMetrics" class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4" data-tamil="தரம் மற்றும் நம்பகத்தன்மை அளவீடுகள்">Quality & Confidence Metrics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-2" data-tamil="சராசரி நம்பகத்தன்மை">Average Confidence</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill bg-green-500" id="confidenceBar" style="width: 0%"></div>
+                                </div>
+                                <span id="confidenceScore" class="font-bold">0%</span>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-2" data-tamil="தரவு முழுமை">Data Completeness</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 progress-bar">
+                                    <div class="progress-fill bg-blue-500" id="completenessBar" style="width: 0%"></div>
+                                </div>
+                                <span id="completenessScore" class="font-bold">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="approvalSection">
+                    <div id="approvalContent" class="space-y-4"></div>
+                    <div class="approval-buttons flex gap-2 mt-4">
+                        <button onclick="approveResults()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700" data-tamil="அனைத்தையும் ஒப்புக்கொள்">
+                            ✔ Approve All
+                        </button>
+                        <button onclick="editResults()" class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700" data-tamil="முடிவுகளைத் திருத்தவும்">
+                            ✖ Edit Results
+                        </button>
+                        <button onclick="exportPreview()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700" data-tamil="முன்னோட்டம் ஏற்றுமதி">
+                            👁 Preview Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Export -->
+            <div id="step6-content" class="step-content" style="display: none;">
+                <h2 class="text-2xl font-bold mb-4">📤 Export Results</h2>
+                <div class="export-section">
+                    <div id="exportPreview" class="border rounded-md p-4 mb-4">
+                        <h3 class="font-semibold mb-2">Processing Complete!</h3>
+                        <p>Your documents have been processed and the Excel template has been populated.</p>
+                        <div id="finalStats" class="mt-2 text-sm text-gray-600"></div>
+                    </div>
+                    <button onclick="downloadResults()" 
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
+                        ⬇ Download Excel File
+                    </button>
+                    <button onclick="resetProcess()" 
+                            class="ml-2 bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700">
+                        Start New Process
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h3>🤖 AI Assistant</h3>
+            <button onclick="toggleChat()" class="text-white text-xl">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Ask questions or provide feedback..." 
+                   class="flex-1 border rounded-l-md px-3 py-2">
+            <button onclick="sendMessage()" class="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Chat Toggle -->
+    <button id="chatToggle" onclick="toggleChat()" 
+            class="fixed bottom-4 right-4 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700">
+        💬
+    </button>
+
+    <script src="app.js"></script>
+</body>
+</html>
