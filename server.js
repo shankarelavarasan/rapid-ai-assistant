@@ -7,6 +7,9 @@ import githubRoutes from './routes/github.js';
 import fileRoutes from './routes/file.js';
 import exportRoutes from './routes/export.js';
 import processRoutes from './routes/process.js';
+import aiStoreRoutes from './routes/aiStore.js';
+import partnershipRoutes from './routes/partnership.js';
+import paymentRoutes from './routes/payment.js';
 import cors from 'cors';
 import fs from 'fs';
 import { createServer } from 'http';
@@ -32,7 +35,12 @@ console.log('Starting server on port:', PORT);
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:10000', 'https://shankarelavarasan.github.io'],
+    origin: [
+      'http://localhost:3000', 
+      'http://localhost:10000', 
+      'https://shankarelavarasan.github.io',
+      'https://shankarelavarasan.github.io/rapid-saas-ai-store'
+    ],
     methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true,
   },
@@ -53,7 +61,12 @@ app.set('io', io);
 // CORS configuration
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:10000', 'https://shankarelavarasan.github.io'],
+    origin: [
+      'http://localhost:3000', 
+      'http://localhost:10000', 
+      'https://shankarelavarasan.github.io',
+      'https://shankarelavarasan.github.io/rapid-saas-ai-store'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -93,12 +106,56 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
+// Root API endpoint with platform information
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'Rapid AI Store API',
+    version: '1.0.0',
+    description: 'Global AI Tools Marketplace - The world\'s first comprehensive AI tools distribution platform',
+    status: 'operational',
+    endpoints: {
+      store: '/api/store - AI Store marketplace operations',
+      partnership: '/api/partnership - Developer partnerships and revenue sharing',
+      payment: '/api/payment - Global payment processing',
+      ai: '/api/ask-gemini - AI processing services',
+      files: '/api/process-file - File processing',
+      github: '/api/github - GitHub integration'
+    },
+    features: [
+      'AI-powered asset generation',
+      'Global distribution infrastructure',
+      'Multi-currency payment processing',
+      'Real-time analytics',
+      'Developer partnership program',
+      'Quality assurance automation'
+    ],
+    regions: ['US-East', 'US-West', 'EU-West', 'AP-South', 'AP-Southeast', 'ME-South'],
+    uptime: '99.97%',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: process.version,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // API routes
 app.use('/api', geminiRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api', fileRoutes);
 app.use('/api', processRoutes);
 app.use('/api', exportRoutes);
+app.use('/api/store', aiStoreRoutes);
+app.use('/api/partnership', partnershipRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Error handling middleware should be the last middleware
 app.use(errorHandler);
