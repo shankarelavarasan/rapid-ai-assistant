@@ -13,6 +13,8 @@ class OnboardingManager {
         this.tooltip = null;
         this.steps = [];
         this.onboardingKey = 'rapid_ai_onboarding_completed';
+        this.skipCounter = 0; // Safety counter to prevent infinite loops
+        this.maxSkips = 10; // Maximum number of skips allowed
         this.init();
     }
 
@@ -106,6 +108,7 @@ class OnboardingManager {
         this.defineSteps();
         this.isActive = true;
         this.currentStep = 0;
+        this.skipCounter = 0; // Reset skip counter for fresh start
         
         this.createOverlay();
         this.showStep(0);
@@ -130,6 +133,13 @@ class OnboardingManager {
      * Show a specific step
      */
     showStep(stepIndex) {
+        // Safety check to prevent infinite loops
+        if (this.skipCounter >= this.maxSkips) {
+            console.warn('OnboardingManager: Too many skipped steps, completing onboarding');
+            this.completeOnboarding();
+            return;
+        }
+
         if (stepIndex >= this.steps.length) {
             this.completeOnboarding();
             return;
@@ -140,10 +150,17 @@ class OnboardingManager {
         
         if (!target) {
             // Skip this step if target doesn't exist
-            this.nextStep();
+            console.warn(`OnboardingManager: Target element '${step.target}' not found, skipping step ${stepIndex}`);
+            this.skipCounter++;
+            
+            // Instead of calling nextStep(), directly call showStep with next index
+            // to avoid the recursive loop through nextStep method
+            this.showStep(stepIndex + 1);
             return;
         }
 
+        // Reset skip counter when we find a valid target
+        this.skipCounter = 0;
         this.currentStep = stepIndex;
         this.highlightElement(target);
         this.showTooltip(step, target);

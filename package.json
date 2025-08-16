@@ -1,17 +1,30 @@
 {
-  "name": "gemini-backend",
+  "name": "rapid-saas-ai-store",
   "version": "1.0.0",
+  "description": "Global AI Tools Marketplace - The world's first comprehensive AI tools distribution platform",
   "main": "server.js",
   "type": "module",
+  "keywords": ["ai", "marketplace", "saas", "tools", "distribution", "global", "platform"],
+  "author": "Shankar Elavarasan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shankarelavarasan/rapid-ai-assistant.git"
+  },
+  "homepage": "https://shankarelavarasan.github.io/rapid-saas-ai-store/",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "tsc",
+    "build": "npm install && npm run lint",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .js,.ts,.json",
     "lint:fix": "eslint . --ext .js,.ts,.json --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "deploy": "npm run build && npm start",
+    "health-check": "curl -f http://localhost:3000/health || exit 1"
   },
   "dependencies": {
     "@google/generative-ai": "^0.15.0",
